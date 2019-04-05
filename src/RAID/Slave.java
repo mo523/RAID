@@ -1,6 +1,6 @@
 package RAID;
 
-public class TEST
+public class Slave
 {
-
+	
 }

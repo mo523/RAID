@@ -20,8 +20,7 @@ public class Slave {
 		ObjectInputStream in = null;
 		do {
 			Socket socket = new Socket(host.getHostAddress(), port);
-			socket.setSoTimeout(2 * 1000);
-
+			socket.setSoTimeout(5 * 1000);
 			try {
 				out = new ObjectOutputStream(socket.getOutputStream());
 				in = new ObjectInputStream(socket.getInputStream());
@@ -30,6 +29,7 @@ public class Slave {
 				System.out.println("Port " + port + " already has a connection. Trying again with " + ++port);
 			}
 		} while (!connected);
+		
 		String temp = null;
 		do {
 			System.out.println("Write Something");

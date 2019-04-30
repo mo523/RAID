@@ -63,11 +63,11 @@ public class Test_Master {
 		//for some reason you have to make the streams for the client/slave to not timeout
 		ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 		ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-//		String temp = null;
-//		do {
-//			temp = (String) in.readObject();
-//			System.out.println(temp);
-//		} while (!temp.equals("1"));
+		String temp = null;
+		do {
+			temp = (String) in.readObject();
+			System.out.println(temp);
+		} while (!temp.equals("1"));
 	}
 
 }

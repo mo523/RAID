@@ -16,6 +16,7 @@ public class Slave {
 		int port = 12345;
 		boolean connected = false;
 		InetAddress host = InetAddress.getLocalHost();
+		//System.out.println(host.getHostAddress());192.168.1.4
 		ObjectOutputStream out = null;
 		ObjectInputStream in = null;
 		do {

@@ -12,12 +12,15 @@ public class RAID_Server
 
 	public static void main(String[] args)
 	{
-		print("RAID Server initializing...\n\n");
+		files.add(new File("Test1", "Today1", "Moshe1"));
+		files.add(new File("Test2", "Today2", "Moshe2"));
+		print("RAID Server initializing...");
 		kb = new Scanner(System.in);
-		master = new Master();
+		master = new Master(files);
 		server = new Server(files);
 		master.start();
 		server.start();
+		new Thread(() -> checkDisconnects()).start();
 		menu();
 		kb.close();
 	}
@@ -27,18 +30,18 @@ public class RAID_Server
 		int choice;
 		do
 		{
-			print("\nMain menu\n0. Shutdown RAID Server\n1. View stats");
+			print("\nMain menu\n0. Shutdown RAID Server\n1. View stats\n2. Broadcast a message");
 			choice = choiceValidator(0, 3);
 			switch (choice)
 			{
 				case 1:
-					checkDisconnects();
+					master.checkForDisconnect();
 					print(files.size() + " files are being stored");
-					print("1 client is connected");
+					print(server.getClientCount() + " clients are connected");
 					print(master.getSlaveCount() + " slaves are connected");
 					break;
 				case 2:
-					broadcastMessage("Hello");
+					broadcastMenu();
 					break;
 				default:
 					break;
@@ -46,14 +49,31 @@ public class RAID_Server
 		} while (choice != 0);
 	}
 
-	private static void checkDisconnects()
+	private static void broadcastMenu()
 	{
-		master.checkForDisconnect();
+		System.out.println("What would you like to broadcast?");
+		String msg = kb.nextLine();
+		master.broadcastMessage(msg);
+		System.out.println("Broadcasted: " + msg);
 	}
 
-	private static void broadcastMessage(String msg)
+	private static void checkDisconnects()
 	{
-		master.broadcastMessage(msg);
+		while (true)
+		{
+			try
+			{
+				Thread.sleep(30000);
+			}
+			catch (InterruptedException e)
+			{
+			}
+			if (master.getSlaveCount() > 0)
+			{
+				print("Heartbeating...");
+				master.checkForDisconnect();
+			}
+		}
 	}
 
 	private static int choiceValidator(int low, int high)
@@ -80,6 +100,6 @@ public class RAID_Server
 
 	private static void print(Object o)
 	{
-		System.out.println(o);
+		System.out.println(o.toString());
 	}
 }

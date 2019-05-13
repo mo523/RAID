@@ -5,22 +5,22 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Scanner;
 
 public class Client
 {
 	private static Socket socket;
-	private static Scanner kb = new Scanner(System.in);
+	private static Scanner kb;
 	private static PrintWriter out;
 	private static BufferedReader in;
 
-	public static void main(String[] args) throws UnknownHostException, IOException
+	public static void main(String[] args) throws IOException, InterruptedException
 	{
+		kb = new Scanner(System.in);
 		connectToRS();
 		menu();
-
 		kb.close();
 	}
 
@@ -36,38 +36,87 @@ public class Client
 				case 1:
 					getAllFiles();
 					break;
+				case 2:
+					addFile();
+					break;
 				default:
 					break;
 			}
 		} while (choice != 0);
 	}
 
+	private static void addFile()
+	{
+		String filePath;
+		// String fileName;
+		// String fileDate;
+		// String fileAuth;
+		byte[] fileContent = null;
+		do
+		{
+			do
+			{
+				print("File location?");
+				filePath = kb.nextLine();
+				if (!exists(filePath))
+					System.out.println("Error! File does not exist");
+			} while (!exists(filePath));
+			try
+			{
+				fileContent = Files.readAllBytes(Path.of(filePath));
+			}
+			catch (IOException e)
+			{
+				System.out.println("File too big...");
+			}
+		} while (fileContent == null);
+		out.println("2");
+		out.println(filePath);
+		out.println(fileContent.length);
+		for (int i = 0; i < fileContent.length; i++)
+			out.println(fileContent[i]);
+	}
+
+	public static boolean exists(String filePath)
+	{
+		return Files.exists(Path.of(filePath));
+	}
+
 	private static void getAllFiles() throws IOException
 	{
 		out.println("1");
-		out.println("$$$");
-		ArrayList<String> files = new ArrayList<>();
-		do
-		{
-			files.add(in.readLine());
-		} while (!files.get(files.size() - 1).equals("$$$"));
-		files.remove(files.size() - 1);
-		files.forEach(System.out::println);
+		System.out.println(getData());
 	}
 
-	private static void connectToRS() throws UnknownHostException, IOException
+	private static StringBuilder getData() throws IOException
 	{
-		print("Welcome to The RAID System");
-		print("What is the IP address for the RAID Server?");
+		String data;
+		StringBuilder sb = new StringBuilder();
+		do
+		{
+			data = in.readLine();
+			if (!data.equals(""))
+				sb.append(data + "\r\n");
+		} while (!data.equals(""));
+		return sb;
+	}
+
+	private static void connectToRS() throws IOException
+	{
+		print("Welcome to The RAID Client System");
+		print("What is the IP address for the RAID Server? (l == localhost, m == moshehirsch.com)");
 		String ip = kb.nextLine();
 		if (ip.charAt(0) == 'l')
 			ip = "127.0.0.1";
 		else if (ip.charAt(0) == 'm')
 			ip = "www.moshehirsch.com";
+		print("What is your name?");
+		String name = kb.nextLine();
 		socket = new Socket(ip, 436);
 		out = new PrintWriter(socket.getOutputStream(), true);
 		in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-		print("Connected to the RAID Server: " + socket.getInetAddress());
+		out.println(name);
+		print("Connected to the RAID Server: " + socket.getInetAddress() + " ," + socket.getLocalPort());
 	}
 
 	private static int choiceValidator(int low, int high)

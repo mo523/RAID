@@ -6,13 +6,13 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
-public class PrioritySlave
+public class ConnectedSlave
 {
 	private Socket socket;
 	private BufferedReader in;
 	private PrintWriter out;
 
-	public PrioritySlave(Socket s) throws IOException
+	public ConnectedSlave(Socket s) throws IOException
 	{
 		this.socket = s;
 		in = new BufferedReader(new InputStreamReader(socket.getInputStream()));

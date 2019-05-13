@@ -6,17 +6,29 @@ import java.util.HashSet;
 
 public class Master extends Thread
 {
-	private volatile HashSet<PrioritySlave> slaves = new HashSet<>();
+	private volatile HashSet<ConnectedSlave> slaves;
+	private volatile HashSet<File> files;
+
+	public Master(HashSet<File> files)
+	{
+		this.files = files;
+		slaves = new HashSet<>();
+	}
 
 	public void run()
+	{
+		listenForConnections();
+	}
+
+	public void listenForConnections()
 	{
 		while (true)
 		{
 			try
 			{
 				ServerSocket ss = new ServerSocket(345);
-				PrioritySlave ps = new PrioritySlave(ss.accept());
-				System.out.println("Connected: " + ps);
+				ConnectedSlave ps = new ConnectedSlave(ss.accept());
+				System.out.println("\tSlave connected;\n\t\t: " + ps);
 				synchronized (slaves)
 				{
 					slaves.add(ps);
@@ -32,16 +44,16 @@ public class Master extends Thread
 
 	public void broadcastMessage(String msg)
 	{
-		for (PrioritySlave s : slaves)
+		for (ConnectedSlave s : slaves)
 			s.sendMessage(msg);
 	}
 
 	public void checkForDisconnect()
 	{
-		HashSet<PrioritySlave> disconnected = new HashSet<>();
+		HashSet<ConnectedSlave> disconnected = new HashSet<>();
 		synchronized (slaves)
 		{
-			for (PrioritySlave s : slaves)
+			for (ConnectedSlave s : slaves)
 			{
 				if (s.disconnected())
 				{
@@ -51,15 +63,15 @@ public class Master extends Thread
 			}
 			slaves.removeAll(disconnected);
 		}
-
 	}
 
 	public int getSlaveCount()
 	{
+		checkForDisconnect();
 		return slaves.size();
 	}
 
-	public HashSet<PrioritySlave> getSockets()
+	public HashSet<ConnectedSlave> getSockets()
 	{
 		return slaves;
 	}

@@ -6,7 +6,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Scanner;
 
 public class Client
@@ -63,7 +63,7 @@ public class Client
 			} while (!exists(filePath));
 			try
 			{
-				fileContent = Files.readAllBytes(Path.of(filePath));
+				fileContent = Files.readAllBytes(Paths.get(filePath));
 			}
 			catch (IOException e)
 			{
@@ -79,7 +79,7 @@ public class Client
 
 	public static boolean exists(String filePath)
 	{
-		return Files.exists(Path.of(filePath));
+		return Files.exists(Paths.get(filePath));
 	}
 
 	private static void getAllFiles() throws IOException

@@ -8,7 +8,9 @@ cd raid
 git checkout Same_Ports
 cd src
 javac RAID/*.java
+cd ../..
 )
+cd RAID/src
 cls
 if "%program%" == "R" (
 java RAID/RAID_Server

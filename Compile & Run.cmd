@@ -5,7 +5,6 @@ if "%compile%" == "D" (
 rmdir raid /s /q
 git clone https://github.com/mo523/RAID.git
 cd raid
-git checkout Same_Ports
 cd src
 javac RAID/*.java
 cd ../..

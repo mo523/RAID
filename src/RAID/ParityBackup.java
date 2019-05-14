@@ -11,7 +11,7 @@ public class ParityBackup
 
 	public static void main(String[] args) throws IOException
 	{
-		//readFile();
+		readFile();
 		readParts();
 	}
 
@@ -57,7 +57,6 @@ public class ParityBackup
 		fos.write(total);
 		System.out.println("Writing complete");
 		fos.close();
-
 	}
 
 	public static void readFile() throws IOException
@@ -87,7 +86,6 @@ public class ParityBackup
 
 		for (int i = 0; i < splitSize; i++)
 		{
-
 			byte b = split[0][i];
 			for (int j = 1; j < 10; j++)
 				b ^= split[j][i];
@@ -99,12 +97,12 @@ public class ParityBackup
 		for (int i = 0; i < 11; i++)
 		{
 			System.out.println("Writing part: " + i);
-//			if (!dropped && random.nextDouble() <= .15)
-//			{
-//				dropped = true;
-//				System.out.println("Failed to write part: " + i);
-//			}
-//			else
+			if (!dropped && random.nextDouble() <= .15)
+			{
+				dropped = true;
+				System.out.println("Failed to write part: " + i);
+			}
+			else
 			{
 				FileOutputStream fos = new FileOutputStream("c:/users/moshe/desktop/tests/test_" + i);
 				fos.write(split[i]);

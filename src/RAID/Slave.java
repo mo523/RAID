@@ -1,41 +1,57 @@
 package RAID;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.InetAddress;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
 import java.util.Scanner;
 
-public class Slave {
-	static Scanner kyb = new Scanner(System.in);
+public class Slave
+{
+	private static Socket socket;
+	private static Scanner kb;
+	private static BufferedReader in;
+	private static PrintWriter out;
 
-	public static void main(String[] args) throws IOException, ClassNotFoundException {
-		int port = 12345;
-		boolean connected = false;
-		InetAddress host = InetAddress.getLocalHost();
-		//System.out.println(host.getHostAddress());192.168.1.4
-		ObjectOutputStream out = null;
-		ObjectInputStream in = null;
-		do {
-			Socket socket = new Socket(host.getHostAddress(), port);
-			socket.setSoTimeout(5 * 1000);
-			try {
-				out = new ObjectOutputStream(socket.getOutputStream());
-				in = new ObjectInputStream(socket.getInputStream());
-				connected = true;
-			} catch (SocketTimeoutException e) {
-				System.out.println("Port " + port + " already has a connection. Trying again with " + ++port);
-			}
-		} while (!connected);
-		
-		String temp = null;
-		do {
-			System.out.println("Write Something");
-			temp = kyb.next();
-			out.writeObject(temp);
-		} while (!temp.equals("1"));
+	public static void main(String[] args) throws IOException
+	{
+		kb = new Scanner(System.in);
+		connectToRS();
+		listen();
+		kb.close();
 	}
+	
+	private static void listen() throws IOException
+	{
+		while (true)
+		{
+			String data = in.readLine();
+			if (data.equals("heartbeat"))
+				out.println("alive");
+			else
+				System.out.println(data);
+		}
+	}
+	
+	private static void connectToRS() throws IOException
+	{
+		print("Welcome to The RAID Slave System");
+		print("What is the IP address for the RAID Server? (l == localhost, m == moshehirsch.com)");
+		String ip = kb.nextLine();
+		if (ip.charAt(0) == 'l')
+			ip = "127.0.0.1";
+		else if (ip.charAt(0) == 'm')
+			ip = "www.moshehirsch.com";
+		socket = new Socket(ip, 345);
+		out = new PrintWriter(socket.getOutputStream(), true);
+		in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+		print("Connected to the RAID Server: " + socket.getInetAddress() + " ," + socket.getLocalPort());
+	}
+
+	private static void print(Object o)
+	{
+		System.out.println(o);
+	}
+
 }

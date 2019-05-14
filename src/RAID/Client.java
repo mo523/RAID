@@ -39,10 +39,28 @@ public class Client
 				case 2:
 					addFile();
 					break;
+				case 3:
+					getFile();
+					break;
+				case 4:
+					delFile();
+					break;
 				default:
 					break;
 			}
 		} while (choice != 0);
+	}
+
+	private static void getFile()
+	{
+		// TODO Auto-generated method stub
+		
+	}
+
+	private static void delFile()
+	{
+		// TODO Auto-generated method stub
+		
 	}
 
 	private static void addFile()

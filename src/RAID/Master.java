@@ -7,11 +7,11 @@ import java.util.HashSet;
 public class Master extends Thread
 {
 	private volatile HashSet<ConnectedSlave> slaves;
-	private volatile HashSet<File> files;
+	private volatile static RAID_Server RAID;
 
-	public Master(HashSet<File> files)
+	public Master(RAID_Server RAID)
 	{
-		this.files = files;
+		this.RAID = RAID;
 		slaves = new HashSet<>();
 	}
 
@@ -27,7 +27,7 @@ public class Master extends Thread
 			try
 			{
 				ServerSocket ss = new ServerSocket(345);
-				ConnectedSlave ps = new ConnectedSlave(ss.accept());
+				ConnectedSlave ps = new ConnectedSlave(ss.accept(), this);
 				System.out.println("\tSlave connected;\n\t\t: " + ps);
 				synchronized (slaves)
 				{
@@ -39,6 +39,15 @@ public class Master extends Thread
 			{
 				e.printStackTrace();
 			}
+		}
+	}
+
+	public void addFile(File file)
+	{
+		synchronized (slaves)
+		{
+			for (ConnectedSlave cs : slaves)
+				cs.sendFile(file);
 		}
 	}
 

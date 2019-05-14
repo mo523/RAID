@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.HashSet;
 
 public class ConnectedClient
 {
@@ -13,11 +12,11 @@ public class ConnectedClient
 	private BufferedReader in;
 	private PrintWriter out;
 	private String name;
-	private volatile HashSet<File> files;
+	private Server server;
 
-	public ConnectedClient(Socket socket, HashSet<File> files) throws IOException
+	public ConnectedClient(Socket socket, Server server) throws IOException
 	{
-		this.files = files;
+		this.server = server;
 		this.socket = socket;
 		in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		out = new PrintWriter(socket.getOutputStream(), true);
@@ -69,8 +68,7 @@ public class ConnectedClient
 
 		File file = new File(fileName, "today", name, 0, 1);
 		file.setData(data);
-		// TODO add functionality to add file to file set
-
+		server.addFile(file);
 	}
 
 	private void sendError()
@@ -80,13 +78,8 @@ public class ConnectedClient
 
 	private void sendInfo()
 	{
-		StringBuilder sb = new StringBuilder();
-		if (files.size() == 0)
-			sb.append("No files...");
-		else
-			for (File f : files)
-				sb.append(f + "\r\n");
-		out.println(sb);
+	
+		out.println(server.getFileInfo());
 		System.out.println("Finished sending");
 	}
 

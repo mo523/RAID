@@ -7,12 +7,12 @@ import java.util.HashSet;
 public class Server extends Thread
 {
 
-	private volatile HashSet<File> files;
 	private HashSet<ConnectedClient> clients;
+	private volatile static RAID_Server RAID;
 
-	public Server(HashSet<File> files)
+	public Server(RAID_Server RAID)
 	{
-		this.files = files;
+		this.RAID = Server.RAID;
 		clients = new HashSet<>();
 	}
 
@@ -28,7 +28,7 @@ public class Server extends Thread
 			try
 			{
 				ServerSocket ss = new ServerSocket(436);
-				ConnectedClient ps = new ConnectedClient(ss.accept(), files);
+				ConnectedClient ps = new ConnectedClient(ss.accept(), this);
 				System.out.println("\tClient connected;\n\t\t" + ps);
 				synchronized (clients)
 				{
@@ -60,5 +60,23 @@ public class Server extends Thread
 	public int getClientCount()
 	{
 		return clients.size();
+	}
+
+	public StringBuilder getFileInfo()
+	{
+
+		StringBuilder sb = new StringBuilder();
+		if (RAID.getFiles().size() == 0)
+			sb.append("No files...");
+		else
+			for (File f : RAID.getFiles())
+				sb.append(f + "\r\n");
+		return sb;
+	}
+
+	public void addFile(File file)
+	{
+		//Passes file up to RAID_Server to handle
+		RAID.addFile(file);
 	}
 }

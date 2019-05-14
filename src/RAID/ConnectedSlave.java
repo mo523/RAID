@@ -11,10 +11,12 @@ public class ConnectedSlave
 	private Socket socket;
 	private BufferedReader in;
 	private PrintWriter out;
+	private Master master;
 
-	public ConnectedSlave(Socket s) throws IOException
+	public ConnectedSlave(Socket socket, Master master) throws IOException
 	{
-		this.socket = s;
+		this.master = master;
+		this.socket = socket;
 		in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		out = new PrintWriter(socket.getOutputStream(), true);
 	}
@@ -34,6 +36,20 @@ public class ConnectedSlave
 		return alive;
 	}
 
+	public void sendFile(File file)
+	{
+		out.println("File");
+		out.println(file.getAddedBy());
+		out.println(file.getDateAdded());
+		out.println(file.getFileName());
+		out.println(file.getPartNumber());
+		out.println(file.getPartsAmount());
+		byte[] data = file.getData();
+		out.println(data.length);
+		for (int i = 0; i < data.length; i++)
+			out.println(data[i]);
+	}
+	
 	public void sendMessage(String msg)
 	{
 		out.println(msg);

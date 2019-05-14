@@ -41,7 +41,6 @@ public class RAID_Server
 		master.start();
 		server.start();
 		new Thread(() -> checkDisconnects()).start();
-		testing();
 	}
 
 	private void testing()

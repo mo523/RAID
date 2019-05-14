@@ -2,17 +2,18 @@ package RAID;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.ArrayList;
 import java.util.HashSet;
 
 public class Server extends Thread
 {
 
 	private HashSet<ConnectedClient> clients;
-	private volatile static RAID_Server RAID;
+	private volatile RAID_Server RAID;
 
 	public Server(RAID_Server RAID)
 	{
-		this.RAID = Server.RAID;
+		this.RAID = RAID;
 		clients = new HashSet<>();
 	}
 
@@ -62,16 +63,16 @@ public class Server extends Thread
 		return clients.size();
 	}
 
-	public StringBuilder getFileInfo()
+	public ArrayList<String> getFileInfo()
 	{
 
-		StringBuilder sb = new StringBuilder();
+		ArrayList<String> files = new ArrayList<>();  
 		if (RAID.getFiles().size() == 0)
-			sb.append("No files...");
+			files.add("No files...");
 		else
 			for (File f : RAID.getFiles())
-				sb.append(f + "\r\n");
-		return sb;
+				files.add(f.toString());
+		return files;
 	}
 
 	public void addFile(File file)

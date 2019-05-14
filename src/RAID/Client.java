@@ -54,13 +54,13 @@ public class Client
 	private static void getFile()
 	{
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	private static void delFile()
 	{
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	private static void addFile()
@@ -103,20 +103,10 @@ public class Client
 	private static void getAllFiles() throws IOException
 	{
 		out.println("1");
-		System.out.println(getData());
-	}
-
-	private static StringBuilder getData() throws IOException
-	{
-		String data;
-		StringBuilder sb = new StringBuilder();
 		do
-		{
-			data = in.readLine();
-			if (!data.equals(""))
-				sb.append(data + "\r\n");
-		} while (!data.equals(""));
-		return sb;
+			System.out.println(in.readLine());
+		while (in.ready());
+		System.out.println("Done Reading");
 	}
 
 	private static void connectToRS() throws IOException

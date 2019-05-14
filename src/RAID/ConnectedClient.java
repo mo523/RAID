@@ -78,8 +78,9 @@ public class ConnectedClient
 
 	private void sendInfo()
 	{
-	
-		out.println(server.getFileInfo());
+
+		for (String s : server.getFileInfo())
+			out.println(s);
 		System.out.println("Finished sending");
 	}
 

@@ -66,6 +66,11 @@ public class ConnectedClient
 		byte[] data = new byte[Integer.parseInt(in.readLine())];
 		for (int i = 0; i < data.length; i++)
 			data[i] = Byte.parseByte(in.readLine());
+
+		File file = new File(fileName, "today", name, 0, 1);
+		file.setData(data);
+		// TODO add functionality to add file to file set
+
 	}
 
 	private void sendError()

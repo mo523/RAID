@@ -12,8 +12,8 @@ public class RAID_Server
 
 	public static void main(String[] args)
 	{
-		files.add(new File("Test1", "Today1", "Moshe1"));
-		files.add(new File("Test2", "Today2", "Moshe2"));
+		files.add(new File("Test1", "Today1", "Moshe1", 0, 1));
+		files.add(new File("Test2", "Today2", "Moshe2", 0, 1));
 		print("RAID Server initializing...");
 		kb = new Scanner(System.in);
 		master = new Master(files);

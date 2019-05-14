@@ -5,12 +5,17 @@ public class File
 	private String fileName;
 	private String dateAdded;
 	private String addedBy;
-	
-	public File(String fileName, String dateAdded, String addedBy)
+	private int partNumber;
+	private int partsAmount;
+	private byte[] data;
+
+	public File(String fileName, String dateAdded, String addedBy, int partNumber, int partsAmount)
 	{
 		this.addedBy = addedBy;
 		this.dateAdded = dateAdded;
 		this.fileName = fileName;
+		this.partNumber = partNumber;
+		this.partsAmount = partsAmount;
 	}
 
 	public String getDateAdded()
@@ -26,6 +31,26 @@ public class File
 	public String getAddedBy()
 	{
 		return addedBy;
+	}
+
+	public int getPartNumber()
+	{
+		return partNumber;
+	}
+
+	public int getPartsAmount()
+	{
+		return partsAmount;
+	}
+
+	public void setData(byte[] data)
+	{
+		this.data = data;
+	}
+
+	public byte[] getData()
+	{
+		return data;
 	}
 
 	@Override

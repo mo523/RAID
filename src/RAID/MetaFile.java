@@ -1,15 +1,14 @@
 package RAID;
 
-public class File
+public class MetaFile
 {
 	private String fileName;
 	private String dateAdded;
 	private String addedBy;
 	private int partNumber;
 	private int partsAmount;
-	private byte[] data;
 
-	public File(String fileName, String dateAdded, String addedBy, int partNumber, int partsAmount)
+	public MetaFile(String fileName, String dateAdded, String addedBy, int partNumber, int partsAmount)
 	{
 		this.addedBy = addedBy;
 		this.dateAdded = dateAdded;
@@ -43,16 +42,6 @@ public class File
 		return partsAmount;
 	}
 
-	public void setData(byte[] data)
-	{
-		this.data = data;
-	}
-
-	public byte[] getData()
-	{
-		return data;
-	}
-
 	@Override
 	public int hashCode()
 	{
@@ -68,7 +57,7 @@ public class File
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		else if (!fileName.equals(((File) obj).fileName))
+		else if (!fileName.equals(((MetaFile) obj).fileName))
 			return false;
 		return true;
 	}

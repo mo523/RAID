@@ -2,17 +2,18 @@ package RAID;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.HashMap;
 import java.util.HashSet;
 
 public class Master extends Thread
 {
 	private volatile HashSet<ConnectedSlave> slaves;
-	private volatile static RAID_Server RAID;
+	private volatile HashMap<String, MetaFile> files;
 
-	public Master(RAID_Server RAID)
+	public Master(HashMap<String, MetaFile> files)
 	{
-		this.RAID = RAID;
 		slaves = new HashSet<>();
+		this.files = files;
 	}
 
 	public void run()
@@ -26,8 +27,8 @@ public class Master extends Thread
 		{
 			try
 			{
-				ServerSocket ss = new ServerSocket(345);
-				ConnectedSlave ps = new ConnectedSlave(ss.accept(), this);
+				ServerSocket ss = new ServerSocket(536);
+				ConnectedSlave ps = new ConnectedSlave(ss.accept());
 				System.out.println("\tSlave connected;\n\t\t: " + ps);
 				synchronized (slaves)
 				{
@@ -42,12 +43,12 @@ public class Master extends Thread
 		}
 	}
 
-	public void addFile(File file)
+	public void addFile(MetaFile file, byte[] data)
 	{
 		synchronized (slaves)
 		{
 			for (ConnectedSlave cs : slaves)
-				cs.sendFile(file);
+				cs.sendFile(file, data);
 		}
 	}
 
@@ -56,6 +57,8 @@ public class Master extends Thread
 		for (ConnectedSlave s : slaves)
 			s.sendMessage(msg);
 	}
+
+
 
 	public void checkForDisconnect()
 	{
@@ -84,4 +87,14 @@ public class Master extends Thread
 	{
 		return slaves;
 	}
+
+	public byte[] getFile(String fileName) throws IOException
+	{
+		synchronized (slaves)
+		{
+			ConnectedSlave cs = slaves.iterator().next();
+			return cs.getFile(fileName);
+		}
+	}
+
 }

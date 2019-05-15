@@ -39,10 +39,10 @@ public class ConnectedClient
 			switch (choice)
 			{
 
-				case -1:
-					System.out.println("ERROR!");
-					sendError();
-					break;
+				// case -1:
+				// System.out.println("ERROR!");
+				// sendError();
+				// break;
 				case 0:
 					throw new IOException();
 				case 1:
@@ -52,11 +52,23 @@ public class ConnectedClient
 				case 2:
 					getFile();
 					break;
+				case 3:
+					sendFile();
+					break;
 				default:
 					System.out.println("huh");
 					break;
 			}
 		}
+	}
+
+	private void sendFile() throws IOException
+	{
+		String fileName = in.readLine();
+		byte[] data = server.getFile(fileName);
+		out.println(data.length);
+		for (byte b : data)
+			out.println(b);
 	}
 
 	private void getFile() throws IOException
@@ -65,23 +77,24 @@ public class ConnectedClient
 		byte[] data = new byte[Integer.parseInt(in.readLine())];
 		for (int i = 0; i < data.length; i++)
 			data[i] = Byte.parseByte(in.readLine());
-
-		File file = new File(fileName, "today", name, 0, 1);
-		file.setData(data);
-		server.addFile(file);
+		// TODO add current datetime
+		MetaFile file = new MetaFile(fileName, "today", name, 0, 1);
+		server.addFile(file, data);
 	}
 
-	private void sendError()
+	private void sendInfo() throws IOException
 	{
-		out.println("ERROR");
-	}
+		int clientModCount = Integer.parseInt(in.readLine());
+		out.println(server.getModCount());
+		if (clientModCount != server.getModCount())
+		{
+			for (String s : server.getFileInfo())
+				out.println(s);
+			System.out.println("Finished sending");
+		}
+		else
+			System.out.println("Client modcount up to date :)");
 
-	private void sendInfo()
-	{
-
-		for (String s : server.getFileInfo())
-			out.println(s);
-		System.out.println("Finished sending");
 	}
 
 	public String getClientName()

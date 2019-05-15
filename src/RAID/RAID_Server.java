@@ -4,17 +4,15 @@ import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Scanner;
 
 public class RAID_Server
 {
 	private static Scanner kb;
-	private static volatile RAID_Server RAID;
-
-	private volatile Master master;
-	private volatile Server server;
-	private volatile HashSet<File> files;
+	private static volatile Master master;
+	private static volatile Server server;
+	private static volatile HashMap<String, MetaFile> files;
 
 	public static void main(String[] args)
 	{
@@ -23,49 +21,33 @@ public class RAID_Server
 			print("ERROR! Ports already in use");
 		else
 		{
-			RAID = new RAID_Server();
 			printIP();
 			kb = new Scanner(System.in);
-			RAID.menu();
+			files = new HashMap<>();
+			master = new Master(files);
+			server = new Server(files, master);
+			master.start();
+			server.start();
+			new Thread(() -> checkDisconnects()).start();
+			menu();
 			kb.close();
 		}
 		print("\nShutting down server...");
 		System.exit(0);	// Needed until we get a better handle on the threads
 	}
 
-	private RAID_Server()
+	private static void testing()
 	{
-		files = new HashSet<>();
-		master = new Master(this);
-		server = new Server(this);
-		master.start();
-		server.start();
-		new Thread(() -> checkDisconnects()).start();
+		// Test File, data says Hello World
+		MetaFile file = new MetaFile("Test", "Today", "Moshe", 0, 1);
+		byte[] data = new byte[] { 72, 101, 108, 108, 111, 32, 87, 111, 114, 108, 100 };
+		files.put("Test", file);
+		server.incrementModCount();
+		master.addFile(file, data);
+
 	}
 
-	private void testing()
-	{
-		 //Test File, data says Hello World
-		 File file = new File("Test", "Today", "Moshe", 0, 1);
-		 file.setData(new byte[] { 72, 101, 108, 108, 111, 32, 87, 111, 114, 108, 100
-		 });
-		 files.add(file);
-		 master.addFile(file);
-	}
-
-	public HashSet<File> getFiles()
-	{
-		return files;
-	}
-
-	public void addFile(File file)
-	{
-		// get file from server <-- connected client <-- client
-		// and send it it to master --> connected slave --> slave
-		master.addFile(file);
-	}
-
-	private void menu()
+	private static void menu()
 	{
 		int choice;
 		do
@@ -92,7 +74,7 @@ public class RAID_Server
 		} while (choice != 0);
 	}
 
-	private void broadcastMenu()
+	private static void broadcastMenu()
 	{
 		System.out.println("What would you like to broadcast?");
 		String msg = kb.nextLine();
@@ -100,7 +82,7 @@ public class RAID_Server
 		System.out.println("Broadcasted: " + msg);
 	}
 
-	private void checkDisconnects()
+	private static void checkDisconnects()
 	{
 		while (true)
 		{

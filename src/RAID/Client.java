@@ -7,6 +7,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Client
@@ -15,6 +16,8 @@ public class Client
 	private static Scanner kb;
 	private static PrintWriter out;
 	private static BufferedReader in;
+	private static int modCount = -1;
+	private static ArrayList<String> files = new ArrayList<>();
 
 	public static void main(String[] args) throws IOException, InterruptedException
 	{
@@ -34,7 +37,7 @@ public class Client
 			switch (choice)
 			{
 				case 1:
-					getAllFiles();
+					getAllFileInfo().forEach(System.out::println);
 					break;
 				case 2:
 					addFile();
@@ -51,10 +54,37 @@ public class Client
 		} while (choice != 0);
 	}
 
-	private static void getFile()
+	private static ArrayList<String> getAllFileInfo() throws IOException
 	{
-		// TODO Auto-generated method stub
+		out.println("1");
+		out.println(modCount);
+		int serverModCount = Integer.parseInt(in.readLine());
+		if (modCount != serverModCount)
+		{
+			modCount = serverModCount;
+			files = new ArrayList<>();
+			do
+				files.add(in.readLine());
+			while (in.ready());
+		}
+		return files;
+	}
 
+	private static void getFile() throws IOException
+	{
+		ArrayList<String> files = getAllFileInfo();
+		System.out.println("Which file would you like to get?");
+		for (int i = 0; i < files.size(); i++)
+			System.out.println((i + 1) + ". " + files.get(i));
+		int choice = choiceValidator(1, files.size());
+		out.println("3");
+		out.println(files.get(choice));	//Use regex to send file name only
+		byte[] data = new byte[Integer.parseInt(in.readLine())];
+		for (int i = 0; i < data.length; i++)
+			data[i] = (byte) Byte.parseByte(in.readLine());
+		// TODO Do something with the received file & data
+		// System.out.println("File received, saving to current directory");
+		// saveToCD(fileName, data);
 	}
 
 	private static void delFile()
@@ -98,15 +128,6 @@ public class Client
 	public static boolean exists(String filePath)
 	{
 		return Files.exists(Paths.get(filePath));
-	}
-
-	private static void getAllFiles() throws IOException
-	{
-		out.println("1");
-		do
-			System.out.println(in.readLine());
-		while (in.ready());
-		System.out.println("Done Reading");
 	}
 
 	private static void connectToRS() throws IOException

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Scanner;
 
@@ -14,11 +15,13 @@ public class Slave
 	private static Scanner kb;
 	private static BufferedReader in;
 	private static PrintWriter out;
-	private static HashSet<File> files;
+	private static HashSet<MetaFile> files;
+	private static HashMap<String, byte[]> fileData;
 
 	public static void main(String[] args) throws IOException
 	{
 		files = new HashSet<>();
+		fileData = new HashMap<>();
 		kb = new Scanner(System.in);
 		connectToRS();
 		listen();
@@ -32,25 +35,36 @@ public class Slave
 			String data = in.readLine();
 			if (data.equals("heartbeat"))
 				out.println("alive");
-			else if (data.equals("File"))
-				ReceiveFile();
+			else if (data.equals("putFile"))
+				receiveFile();
+			else if (data.equals("getFile"))
+				sendFile();
 			else
 				System.out.println(data);
 		}
 	}
 
-	private static void ReceiveFile() throws IOException
+	private static void sendFile() throws IOException
+	{
+		String fileName = in.readLine();
+		byte[] data = fileData.get(fileName);
+		out.println(data.length);
+		for (byte b : data)
+			out.println(b);
+	}
+
+	private static void receiveFile() throws IOException
 	{
 		String addedBy = in.readLine();
 		String dateAdded = in.readLine();
 		String fileName = in.readLine();
 		int partNumber = Integer.parseInt(in.readLine());
 		int partsAmount = Integer.parseInt(in.readLine());
-		File file = new File(fileName, dateAdded, addedBy, partNumber, partsAmount);
+		MetaFile file = new MetaFile(fileName, dateAdded, addedBy, partNumber, partsAmount);
 		byte[] data = new byte[Integer.parseInt(in.readLine())];
 		for (int i = 0; i < data.length; i++)
-			data[i] = (byte) Byte.parseByte(in.readLine());
-		file.setData(data);
+			data[i] = Byte.parseByte(in.readLine());
+		fileData.put(fileName, data);
 		files.add(file);
 	}
 
@@ -63,7 +77,7 @@ public class Slave
 			ip = "127.0.0.1";
 		else if (ip.charAt(0) == 'm')
 			ip = "www.moshehirsch.com";
-		socket = new Socket(ip, 345);
+		socket = new Socket(ip, 536);
 		out = new PrintWriter(socket.getOutputStream(), true);
 		in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		print("Connected to the RAID Server: " + socket.getInetAddress() + " ," + socket.getLocalPort());

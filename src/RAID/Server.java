@@ -3,17 +3,26 @@ package RAID;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 
 public class Server extends Thread
 {
 
 	private HashSet<ConnectedClient> clients;
-	private volatile RAID_Server RAID;
+	private volatile HashMap<String, MetaFile> files;
+	private volatile Master master;
+	private volatile int modCount = 0;
 
-	public Server(RAID_Server RAID)
+	public void incrementModCount()
 	{
-		this.RAID = RAID;
+		modCount++;
+	}
+
+	public Server(HashMap<String, MetaFile> files, Master master)
+	{
+		this.master = master;
+		this.files = files;
 		clients = new HashSet<>();
 	}
 
@@ -65,19 +74,30 @@ public class Server extends Thread
 
 	public ArrayList<String> getFileInfo()
 	{
-
-		ArrayList<String> files = new ArrayList<>();  
-		if (RAID.getFiles().size() == 0)
-			files.add("No files...");
+		ArrayList<String> fileInfo = new ArrayList<>();
+		if (files.size() == 0)
+			fileInfo.add("No files...");
 		else
-			for (File f : RAID.getFiles())
-				files.add(f.toString());
-		return files;
+			for (MetaFile f : files.values())
+				fileInfo.add(f.toString());
+		return fileInfo;
 	}
 
-	public void addFile(File file)
+	public void addFile(MetaFile file, byte[] data)
 	{
-		//Passes file up to RAID_Server to handle
-		RAID.addFile(file);
+		modCount++;
+
+		// Passes file to Master
+		master.addFile(file, data);
+	}
+
+	public int getModCount()
+	{
+		return modCount;
+	}
+
+	public byte[] getFile(String fileName) throws IOException
+	{
+		return master.getFile(fileName);
 	}
 }

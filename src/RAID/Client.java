@@ -1,6 +1,7 @@
 package RAID;
 
 import java.io.BufferedReader;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -76,30 +77,44 @@ public class Client
 		System.out.println("Which file would you like to get?");
 		for (int i = 0; i < files.size(); i++)
 			System.out.println((i + 1) + ". " + files.get(i));
-		int choice = choiceValidator(1, files.size());
+		int choice = choiceValidator(1, files.size()) - 1;
 		out.println("3");
-		out.println(files.get(choice));	//Use regex to send file name only
+		String fileName = files.get(choice).split("\\t+")[0];
+		out.println(fileName);
 		byte[] data = new byte[Integer.parseInt(in.readLine())];
 		for (int i = 0; i < data.length; i++)
 			data[i] = (byte) Byte.parseByte(in.readLine());
-		// TODO Do something with the received file & data
-		// System.out.println("File received, saving to current directory");
-		// saveToCD(fileName, data);
+		saveFile(fileName, data);
 	}
 
-	private static void delFile()
+	private static void saveFile(String fileName, byte[] data)
 	{
-		// TODO Auto-generated method stub
+		try (FileOutputStream fos = new FileOutputStream(fileName))
+		{
+			fos.write(data);
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
 
+	private static void delFile() throws IOException
+	{
+		ArrayList<String> files = getAllFileInfo();
+		System.out.println("Which file would you like to delete?");
+		for (int i = 0; i < files.size(); i++)
+			System.out.println((i + 1) + ". " + files.get(i));
+		int choice = choiceValidator(1, files.size()) - 1;
+		out.println("4");
+		String fileName = files.get(choice).split("\\t+")[0];
+		out.println(fileName);
 	}
 
 	private static void addFile()
 	{
-		String filePath;
-		// String fileName;
-		// String fileDate;
-		// String fileAuth;
 		byte[] fileContent = null;
+		String filePath;
 		do
 		{
 			do

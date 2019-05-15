@@ -50,6 +50,7 @@ public class Master extends Thread
 			for (ConnectedSlave cs : slaves)
 				cs.sendFile(file, data);
 		}
+		files.put(file.getFileName(), file);
 	}
 
 	public void broadcastMessage(String msg)
@@ -57,8 +58,6 @@ public class Master extends Thread
 		for (ConnectedSlave s : slaves)
 			s.sendMessage(msg);
 	}
-
-
 
 	public void checkForDisconnect()
 	{
@@ -95,6 +94,16 @@ public class Master extends Thread
 			ConnectedSlave cs = slaves.iterator().next();
 			return cs.getFile(fileName);
 		}
+	}
+
+	public void delFile(String fileName)
+	{
+		synchronized (slaves)
+		{
+			for (ConnectedSlave cs : slaves)
+				cs.delFile(fileName);
+		}
+		files.remove(fileName);
 	}
 
 }

@@ -38,11 +38,6 @@ public class ConnectedClient
 			}
 			switch (choice)
 			{
-
-				// case -1:
-				// System.out.println("ERROR!");
-				// sendError();
-				// break;
 				case 0:
 					throw new IOException();
 				case 1:
@@ -55,11 +50,19 @@ public class ConnectedClient
 				case 3:
 					sendFile();
 					break;
+				case 4:
+					delFile();
 				default:
 					System.out.println("huh");
 					break;
 			}
 		}
+	}
+
+	private void delFile() throws IOException
+	{
+		String fileName = in.readLine();
+		server.delFile(fileName);
 	}
 
 	private void sendFile() throws IOException
@@ -94,7 +97,6 @@ public class ConnectedClient
 		}
 		else
 			System.out.println("Client modcount up to date :)");
-
 	}
 
 	public String getClientName()

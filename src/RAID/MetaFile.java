@@ -67,5 +67,4 @@ public class MetaFile
 	{
 		return fileName + "\t\t\t" + dateAdded;
 	}
-
 }

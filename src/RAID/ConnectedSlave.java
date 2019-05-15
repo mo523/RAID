@@ -36,7 +36,7 @@ public class ConnectedSlave
 
 	public void sendFile(MetaFile file, byte[] data)
 	{
-		out.println("File");
+		out.println("putFile");
 		out.println(file.getAddedBy());
 		out.println(file.getDateAdded());
 		out.println(file.getFileName());
@@ -66,5 +66,11 @@ public class ConnectedSlave
 		for (int i = 0; i < data.length; i++)
 			data[i] = Byte.parseByte(in.readLine());
 		return data;
+	}
+
+	public void delFile(String fileName)
+	{
+		out.println("delFile");
+		out.println(fileName);
 	}
 }

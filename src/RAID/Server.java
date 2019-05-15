@@ -86,7 +86,6 @@ public class Server extends Thread
 	public void addFile(MetaFile file, byte[] data)
 	{
 		modCount++;
-
 		// Passes file to Master
 		master.addFile(file, data);
 	}
@@ -99,5 +98,10 @@ public class Server extends Thread
 	public byte[] getFile(String fileName) throws IOException
 	{
 		return master.getFile(fileName);
+	}
+
+	public void delFile(String fileName)
+	{
+		master.delFile(fileName);
 	}
 }

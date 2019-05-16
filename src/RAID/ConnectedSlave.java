@@ -25,7 +25,7 @@ public class ConnectedSlave
 		boolean dead;
 		try
 		{
-			out.writeObject("heartbeat");
+			out.writeObject(SlaveCommand.Heartbeat);
 			dead = in.readLine() == "alive";
 		}
 		catch (IOException e)
@@ -44,7 +44,7 @@ public class ConnectedSlave
 //		out.println(file.getPartNumber());
 //		out.println(file.getPartsAmount());
 		try {
-			out.writeObject("putFile");
+			out.writeObject(SlaveCommand.PutFile);
 			out.writeObject(file);
 			out.writeObject(data);
 		} catch (IOException e) {
@@ -74,7 +74,7 @@ public class ConnectedSlave
 
 	public byte[] getFile(String fileName) throws IOException
 	{
-		out.writeObject("getFile");
+		out.writeObject(SlaveCommand.GetFile);
 		out.writeObject(fileName);
 		byte[] data = new byte[Integer.parseInt(in.readLine())];
 		for (int i = 0; i < data.length; i++)
@@ -85,10 +85,9 @@ public class ConnectedSlave
 	public void delFile(String fileName)
 	{
 		try {
-			out.writeObject("delFile");
+			out.writeObject(SlaveCommand.DelFile);
 			out.writeObject(fileName);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		

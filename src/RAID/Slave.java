@@ -69,14 +69,19 @@ public class Slave
 	{
 		while (true)
 		{
-			String data = in.readLine();
-			if (data.equals("heartbeat"))
+			Object data = null;
+			try {
+				data = in.readObject();
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+			}
+			if (data == SlaveCommand.Heartbeat)
 				heartbeat();
-			else if (data.equals("putFile"))
+			else if (data == SlaveCommand.PutFile)
 				receiveFile();
-			else if (data.equals("getFile"))
+			else if (data == SlaveCommand.GetFile)
 				sendFile();
-			else if (data.equals("delFile"))
+			else if (data == SlaveCommand.DelFile)
 				delFile();
 			else
 				System.out.println("ERROR! Unknown command: " + data);
@@ -118,7 +123,12 @@ public class Slave
 
 	private static void sendFile() throws IOException
 	{
-		String fileName = in.readLine();
+		String fileName = null;
+		try {
+			fileName = (String) in.readObject();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
 		byte[] data = Files.readAllBytes(Paths.get(fileName));
 		out.println(data.length);
 		for (byte b : data)

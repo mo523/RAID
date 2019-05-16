@@ -1,9 +1,8 @@
 package RAID;
 
-import java.io.BufferedReader;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.file.Files;
@@ -34,7 +33,7 @@ public class Slave
 {
 	private static Socket socket;
 	private static Scanner kb;
-	private static BufferedReader in;
+	private static ObjectInputStream in;
 	private static PrintWriter out;
 	private static HashMap<String, MetaFile> metaFiles;
 
@@ -92,20 +91,29 @@ public class Slave
 
 	private static void receiveFile() throws IOException
 	{
-		String addedBy = in.readLine();
-		String dateAdded = in.readLine();
-		String fileName = in.readLine();
-		int partNumber = Integer.parseInt(in.readLine());
-		int partsAmount = Integer.parseInt(in.readLine());
-		MetaFile file = new MetaFile(fileName, dateAdded, addedBy, partNumber, partsAmount);
-		byte[] data = new byte[Integer.parseInt(in.readLine())];
-		for (int i = 0; i < data.length; i++)
-			data[i] = Byte.parseByte(in.readLine());
-		metaFiles.put(fileName, file);
-		FileOutputStream fos = new FileOutputStream(fileName);
+//		String addedBy = in.readLine();
+//		String dateAdded = in.readLine();
+//		String fileName = in.readLine();
+//		int partNumber = Integer.parseInt(in.readLine());
+//		int partsAmount = Integer.parseInt(in.readLine());
+		MetaFile file = null;
+		byte[] data = null;
+		try {
+			file = (MetaFile) in.readObject();
+			data = (byte[]) in.readObject();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}//new MetaFile(fileName, dateAdded, addedBy, partNumber, partsAmount);
+//		byte[] data = new byte[Integer.parseInt(in.readLine())];
+//		for (int i = 0; i < data.length; i++)
+//			data[i] = Byte.parseByte(in.readLine());
+		
+		
+		metaFiles.put(file.getFileName(), file);
+		FileOutputStream fos = new FileOutputStream(file.getFileName());
 		fos.write(data);
 		fos.close();
-		System.out.println("Succesfully received file: " + fileName);
+		System.out.println("Succesfully received file: " + file.getFileName());
 	}
 
 	private static void sendFile() throws IOException
@@ -150,7 +158,7 @@ public class Slave
 			ip = "www.moshehirsch.com";
 		socket = new Socket(ip, 536);
 		out = new PrintWriter(socket.getOutputStream(), true);
-		in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+		in = new ObjectInputStream(socket.getInputStream());//BufferedReader(new InputStreamReader(socket.getInputStream()));
 		System.out.println("Connected to the RAID Server: " + socket.getInetAddress() + ", " + socket.getLocalPort());
 	}
 }

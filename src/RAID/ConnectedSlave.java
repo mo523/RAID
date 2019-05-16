@@ -3,6 +3,7 @@ package RAID;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 
@@ -10,13 +11,13 @@ public class ConnectedSlave
 {
 	private Socket socket;
 	private BufferedReader in;
-	private PrintWriter out;
+	private ObjectOutputStream out;
 
 	public ConnectedSlave(Socket socket) throws IOException
 	{
 		this.socket = socket;
 		in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-		out = new PrintWriter(socket.getOutputStream(), true);
+		out = new ObjectOutputStream(socket.getOutputStream());
 	}
 
 	public boolean disconnected()
@@ -24,7 +25,7 @@ public class ConnectedSlave
 		boolean dead;
 		try
 		{
-			out.println("heartbeat");
+			out.writeObject("heartbeat");
 			dead = in.readLine() == "alive";
 		}
 		catch (IOException e)
@@ -36,20 +37,33 @@ public class ConnectedSlave
 
 	public void sendFile(MetaFile file, byte[] data)
 	{
-		out.println("putFile");
-		out.println(file.getAddedBy());
-		out.println(file.getDateAdded());
-		out.println(file.getFileName());
-		out.println(file.getPartNumber());
-		out.println(file.getPartsAmount());
-		out.println(data.length);
-		for (int i = 0; i < data.length; i++)
-			out.println(data[i]);
+		
+//		out.println(file.getAddedBy());
+//		out.println(file.getDateAdded());
+//		out.println(file.getFileName());
+//		out.println(file.getPartNumber());
+//		out.println(file.getPartsAmount());
+		try {
+			out.writeObject("putFile");
+			out.writeObject(file);
+			out.writeObject(data);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+//		out.println(data.length);
+//		for (int i = 0; i < data.length; i++)
+//			out.println(data[i]);
+
 	}
 
 	public void sendMessage(String msg)
 	{
-		out.println(msg);
+		try {
+			out.writeObject(msg);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -60,8 +74,8 @@ public class ConnectedSlave
 
 	public byte[] getFile(String fileName) throws IOException
 	{
-		out.println("getFile");
-		out.println(fileName);
+		out.writeObject("getFile");
+		out.writeObject(fileName);
 		byte[] data = new byte[Integer.parseInt(in.readLine())];
 		for (int i = 0; i < data.length; i++)
 			data[i] = Byte.parseByte(in.readLine());
@@ -70,7 +84,13 @@ public class ConnectedSlave
 
 	public void delFile(String fileName)
 	{
-		out.println("delFile");
-		out.println(fileName);
+		try {
+			out.writeObject("delFile");
+			out.writeObject(fileName);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 }

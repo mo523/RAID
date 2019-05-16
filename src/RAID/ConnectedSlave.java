@@ -1,37 +1,35 @@
 package RAID;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
 import java.net.Socket;
 
 public class ConnectedSlave
 {
 	private Socket socket;
-	private BufferedReader in;
+	private ObjectInputStream in;
 	private ObjectOutputStream out;
 
 	public ConnectedSlave(Socket socket) throws IOException
 	{
 		this.socket = socket;
-		in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+		in = new ObjectInputStream(socket.getInputStream());//new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		out = new ObjectOutputStream(socket.getOutputStream());
 	}
 
 	public boolean disconnected()
 	{
-		boolean dead;
+		boolean dead = false;
 		try
 		{
 			out.writeObject(SlaveCommand.Heartbeat);
-			dead = in.readLine() == "alive";
+			dead = in.readUTF().equals("alive");
 		}
 		catch (IOException e)
 		{
 			dead = true;
-		}
+		} 
 		return dead;
 	}
 
@@ -60,7 +58,7 @@ public class ConnectedSlave
 	public void sendMessage(String msg)
 	{
 		try {
-			out.writeObject(msg);
+			out.writeUTF(msg);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -75,10 +73,16 @@ public class ConnectedSlave
 	public byte[] getFile(String fileName) throws IOException
 	{
 		out.writeObject(SlaveCommand.GetFile);
-		out.writeObject(fileName);
-		byte[] data = new byte[Integer.parseInt(in.readLine())];
-		for (int i = 0; i < data.length; i++)
-			data[i] = Byte.parseByte(in.readLine());
+		out.writeUTF(fileName);
+		byte[] data = null;
+		try {
+			data = (byte[]) in.readObject();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		//new byte[Integer.parseInt(in.readLine())];
+//		for (int i = 0; i < data.length; i++)
+//			data[i] = Byte.parseByte(in.readLine());
 		return data;
 	}
 
@@ -86,7 +90,7 @@ public class ConnectedSlave
 	{
 		try {
 			out.writeObject(SlaveCommand.DelFile);
-			out.writeObject(fileName);
+			out.writeUTF(fileName);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

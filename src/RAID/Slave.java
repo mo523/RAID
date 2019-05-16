@@ -3,6 +3,7 @@ package RAID;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.file.Files;
@@ -34,7 +35,7 @@ public class Slave
 	private static Socket socket;
 	private static Scanner kb;
 	private static ObjectInputStream in;
-	private static PrintWriter out;
+	private static ObjectOutputStream out;
 	private static HashMap<String, MetaFile> metaFiles;
 
 	public static void main(String[] args) throws IOException
@@ -91,7 +92,11 @@ public class Slave
 	private static void heartbeat()
 	{
 		System.out.println("Master requesting a heartbeat");
-		out.println("alive");
+		try {
+			out.writeUTF("alive");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private static void receiveFile() throws IOException
@@ -123,22 +128,18 @@ public class Slave
 
 	private static void sendFile() throws IOException
 	{
-		String fileName = null;
-		try {
-			fileName = (String) in.readObject();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
+		String fileName = in.readUTF();
 		byte[] data = Files.readAllBytes(Paths.get(fileName));
-		out.println(data.length);
-		for (byte b : data)
-			out.println(b);
+		out.writeObject(data);
+//		out.println(data.length);
+//		for (byte b : data)
+//			out.println(b);
 		System.out.println("Master requesting file: " + fileName);
 	}
 
 	private static void delFile() throws IOException
 	{
-		String fileName = in.readLine();
+		String fileName = in.readUTF();
 		Files.delete(Paths.get(fileName));
 		metaFiles.remove(fileName);
 		System.out.println("Master requesting deletion of: " + fileName);
@@ -167,7 +168,7 @@ public class Slave
 		else if (ip.charAt(0) == 'm')
 			ip = "www.moshehirsch.com";
 		socket = new Socket(ip, 536);
-		out = new PrintWriter(socket.getOutputStream(), true);
+		out = new ObjectOutputStream(socket.getOutputStream());//PrintWriter(socket.getOutputStream(), true);
 		in = new ObjectInputStream(socket.getInputStream());//BufferedReader(new InputStreamReader(socket.getInputStream()));
 		System.out.println("Connected to the RAID Server: " + socket.getInetAddress() + ", " + socket.getLocalPort());
 	}

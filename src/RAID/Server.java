@@ -66,7 +66,10 @@ public class Server extends Thread
 	{
 		return clients.size();
 	}
-
+	/**
+	 *  This method returns an ArrayList of Strings of all the MetaFiles or an ArryList containing one String: "No files..."
+	 * @return
+	 */
 	public ArrayList<String> getFileInfo()
 	{
 		ArrayList<String> fileInfo = new ArrayList<>();

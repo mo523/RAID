@@ -11,6 +11,22 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+/**
+ * The {@code Client} class is a standalone class used for the client side of the
+ * RAID system. The class is completely static since it contains its own
+ * {@code main} method and should not be instantiated in another class.
+ * <p>
+ * {@code Client} works by connecting to the {@link RAID_Server} through the
+ * {@link ConnectedClient} class. See the {@link #connectToRS()} method to see
+ * how the connection is established.
+ * 
+ * @see RAID_Server
+ * @see ConnectedClient
+ * 
+ * @author Moshe Hirsch
+ *
+ */
+
 public class Client
 {
 	private static Socket socket;
@@ -163,7 +179,7 @@ public class Client
 		out = new PrintWriter(socket.getOutputStream(), true);
 		in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		out.println(name);
-		print("Connected to the RAID Server: " + socket.getInetAddress() + " ," + socket.getLocalPort());
+		print("Connected to the RAID Server: " + socket.getInetAddress() + ", " + socket.getLocalPort());
 	}
 
 	private static int choiceValidator(int low, int high)

@@ -136,7 +136,8 @@ public class Client
 			}
 		} while (fileContent == null);
 		out.println("2");
-		out.println(filePath);
+		String fileNames[] = filePath.split("[\\\\/]");
+		out.println(fileNames[fileNames.length - 1]);
 		out.println(fileContent.length);
 		for (int i = 0; i < fileContent.length; i++)
 			out.println(fileContent[i]);

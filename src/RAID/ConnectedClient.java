@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Date;
 
 public class ConnectedClient
 {
@@ -80,8 +81,7 @@ public class ConnectedClient
 		byte[] data = new byte[Integer.parseInt(in.readLine())];
 		for (int i = 0; i < data.length; i++)
 			data[i] = Byte.parseByte(in.readLine());
-		// TODO add current datetime
-		MetaFile file = new MetaFile(fileName, "today", name, 0, 1);
+		MetaFile file = new MetaFile(fileName, new Date().toString().substring(0, 16), name, 0, 1);
 		server.addFile(file, data);
 	}
 

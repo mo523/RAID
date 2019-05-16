@@ -33,10 +33,12 @@ public class Client
 		int choice;
 		do
 		{
-			print("What would you like to do?\n1. View all files\n2. Add a file\n3. Get a file\n4. Remove a file");
-			choice = choiceValidator(1, 4);
+			print("What would you like to do?\n0. Exit\n1. View all files\n2. Add a file\n3. Get a file\n4. Remove a file");
+			choice = choiceValidator(0, 4);
 			switch (choice)
 			{
+				case 0:
+					break;
 				case 1:
 					getAllFileInfo().forEach(System.out::println);
 					break;

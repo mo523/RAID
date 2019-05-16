@@ -14,11 +14,6 @@ public class Server extends Thread
 	private volatile Master master;
 	private volatile int modCount = 0;
 
-	public void incrementModCount()
-	{
-		modCount++;
-	}
-
 	public Server(HashMap<String, MetaFile> files, Master master)
 	{
 		this.master = master;

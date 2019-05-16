@@ -105,5 +105,4 @@ public class Master extends Thread
 		}
 		files.remove(fileName);
 	}
-
 }

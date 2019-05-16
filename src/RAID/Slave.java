@@ -1,10 +1,13 @@
 package RAID;
 
 import java.io.BufferedReader;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Scanner;
 
@@ -15,12 +18,10 @@ public class Slave
 	private static BufferedReader in;
 	private static PrintWriter out;
 	private static HashMap<String, MetaFile> metaFiles;
-	private static HashMap<String, byte[]> fileData;
 
 	public static void main(String[] args) throws IOException
 	{
 		metaFiles = new HashMap<>();
-		fileData = new HashMap<>();
 		kb = new Scanner(System.in);
 		connectToRS();
 		listen();
@@ -62,15 +63,17 @@ public class Slave
 		byte[] data = new byte[Integer.parseInt(in.readLine())];
 		for (int i = 0; i < data.length; i++)
 			data[i] = Byte.parseByte(in.readLine());
-		fileData.put(fileName, data);
 		metaFiles.put(fileName, file);
+		FileOutputStream fos = new FileOutputStream(fileName);
+		fos.write(data);
+		fos.close();
 		System.out.println("Succesfully received file: " + fileName);
 	}
 
 	private static void sendFile() throws IOException
 	{
 		String fileName = in.readLine();
-		byte[] data = fileData.get(fileName);
+		byte[] data  = Files.readAllBytes(Paths.get(fileName));
 		out.println(data.length);
 		for (byte b : data)
 			out.println(b);
@@ -80,7 +83,7 @@ public class Slave
 	private static void delFile() throws IOException
 	{
 		String fileName = in.readLine();
-		fileData.remove(fileName);
+		Files.delete(Paths.get(fileName));
 		metaFiles.remove(fileName);
 		System.out.println("Master requesting deletion of: " + fileName);
 	}

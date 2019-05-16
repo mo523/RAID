@@ -41,10 +41,7 @@ public class RAID_Server
 		// Test File, data says Hello World
 		MetaFile file = new MetaFile("Hello.txt", "Today", "Moshe", 0, 1);
 		byte[] data = new byte[] { 72, 101, 108, 108, 111, 32, 87, 111, 114, 108, 100 };
-		files.put("Test", file);
-		server.incrementModCount();
-		master.addFile(file, data);
-
+		server.addFile(file, data);
 	}
 
 	private static void menu()

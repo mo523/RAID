@@ -51,6 +51,8 @@ public class Server extends Thread
 						{
 							clients.remove(ps);
 						}
+					} catch (ClassNotFoundException e) {
+						e.printStackTrace();
 					}
 				}).start();
 				ss.close();

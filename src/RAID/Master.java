@@ -43,7 +43,7 @@ public class Master extends Thread
 		}
 	}
 
-	public void addFile(MetaFile file, byte[] data)
+	public void addFile(MetaFile file, byte[] data) throws IOException
 	{
 		synchronized (slaves)
 		{
@@ -87,7 +87,7 @@ public class Master extends Thread
 		return slaves;
 	}
 
-	public byte[] getFile(String fileName) throws IOException
+	public byte[] getFile(String fileName) throws IOException, ClassNotFoundException
 	{
 		synchronized (slaves)
 		{
@@ -96,7 +96,7 @@ public class Master extends Thread
 		}
 	}
 
-	public void delFile(String fileName)
+	public void delFile(String fileName) throws IOException
 	{
 		synchronized (slaves)
 		{

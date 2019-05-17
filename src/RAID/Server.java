@@ -83,7 +83,7 @@ public class Server extends Thread
 		return fileInfo;
 	}
 
-	public void addFile(MetaFile file, byte[] data)
+	public void addFile(MetaFile file, byte[] data) throws IOException
 	{
 		modCount++;
 		// Passes file to Master
@@ -95,12 +95,12 @@ public class Server extends Thread
 		return modCount;
 	}
 
-	public byte[] getFile(String fileName) throws IOException
+	public byte[] getFile(String fileName) throws IOException, ClassNotFoundException
 	{
 		return master.getFile(fileName);
 	}
 
-	public void delFile(String fileName)
+	public void delFile(String fileName) throws IOException
 	{
 		master.delFile(fileName);
 	}

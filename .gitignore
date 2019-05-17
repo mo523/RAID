@@ -8,6 +8,7 @@
 *.zip
 *.tar.gz
 *.rar
+*.ini
 /bin/
 .project
 .classpath

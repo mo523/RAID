@@ -73,7 +73,7 @@ public class ConnectedClient
 		server.delFile(fileName);
 	}
 
-	private void sendFile() throws IOException
+	private void sendFile() throws IOException, ClassNotFoundException
 	{
 		String fileName = in.readLine();
 //		byte[] data = server.getFile(fileName);

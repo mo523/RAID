@@ -14,7 +14,7 @@ public class RAID_Server
 	private static volatile Server server;
 	private static volatile HashMap<String, MetaFile> files;
 
-	public static void main(String[] args)
+	public static void main(String[] args) throws IOException
 	{
 		print("RAID Server initializing...\n");
 		if (checkForBind())
@@ -36,7 +36,7 @@ public class RAID_Server
 		System.exit(0);	// Needed until we get a better handle on the threads
 	}
 
-	private static void testing()
+	private static void testing() throws IOException
 	{
 		// Test File, data says Hello World
 		MetaFile file = new MetaFile("Hello.txt", "Test date", "Moshe", 0, 1);
@@ -44,7 +44,7 @@ public class RAID_Server
 		server.addFile(file, data);
 	}
 
-	private static void menu()
+	private static void menu() throws IOException
 	{
 		int choice;
 		do

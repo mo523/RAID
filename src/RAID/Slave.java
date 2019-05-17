@@ -61,9 +61,9 @@ public class Slave {
 	 * <p>
 	 * Anything else prints an error message followed by the unknown command.
 	 * 
-	 * @throws IOException if there is an error reading (most likely caused by a
-	 *                     unexpected server shutdown).
-	 * @throws ClassNotFoundException 
+	 * @throws IOException            if there is an error reading (most likely
+	 *                                caused by a unexpected server shutdown).
+	 * @throws ClassNotFoundException
 	 */
 	private static void listen() throws IOException, ClassNotFoundException {
 		while (true) {
@@ -80,6 +80,8 @@ public class Slave {
 			else if (data == SlaveCommand.GetFile)
 				sendFile();
 			else if (data == SlaveCommand.DelFile)
+				delFile();
+			else if (data == SlaveCommand.GetSpecs)
 				delFile();
 			else
 				System.out.println("ERROR! Unknown command: " + data);
@@ -155,5 +157,9 @@ public class Slave {
 		in = new ObjectInputStream(socket.getInputStream());// BufferedReader(new
 															// InputStreamReader(socket.getInputStream()));
 		System.out.println("Connected to the RAID Server: " + socket.getInetAddress() + ", " + socket.getLocalPort());
+	}
+
+	public void getSpecs() throws IOException {
+		out.writeObject(0);
 	}
 }

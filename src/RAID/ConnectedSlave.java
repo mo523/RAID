@@ -6,7 +6,7 @@ import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 
-public class ConnectedSlave {
+public class ConnectedSlave implements Comparable<ConnectedSlave> {
 	private Socket socket;
 	private ObjectInputStream in;
 	private ObjectOutputStream out;
@@ -71,5 +71,20 @@ public class ConnectedSlave {
 	public void delFile(String fileName) throws IOException {
 		out.writeObject(SlaveCommand.DelFile);
 		out.writeUTF(fileName);
+	}
+
+	public int getSpecs() throws IOException, ClassNotFoundException {
+		out.writeObject(SlaveCommand.GetSpecs);
+		return (int) in.readObject();
+	}
+
+	@Override
+	public int compareTo(ConnectedSlave other) {
+		try {
+			return this.getSpecs() - other.getSpecs();
+		} catch (ClassNotFoundException | IOException e) {
+			e.printStackTrace();
+			return 0;
+		}
 	}
 }

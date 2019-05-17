@@ -30,16 +30,14 @@ import java.util.Scanner;
  *
  */
 
-public class Slave
-{
+public class Slave {
 	private static Socket socket;
 	private static Scanner kb;
 	private static ObjectInputStream in;
 	private static ObjectOutputStream out;
 	private static HashMap<String, MetaFile> metaFiles;
 
-	public static void main(String[] args) throws IOException
-	{
+	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		metaFiles = new HashMap<>();
 		kb = new Scanner(System.in);
 		connectToRS();
@@ -64,12 +62,11 @@ public class Slave
 	 * Anything else prints an error message followed by the unknown command.
 	 * 
 	 * @throws IOException if there is an error reading (most likely caused by a
-	 * unexpected server shutdown).
+	 *                     unexpected server shutdown).
+	 * @throws ClassNotFoundException 
 	 */
-	private static void listen() throws IOException
-	{
-		while (true)
-		{
+	private static void listen() throws IOException, ClassNotFoundException {
+		while (true) {
 			Object data = null;
 			try {
 				data = in.readObject();
@@ -89,18 +86,12 @@ public class Slave
 		}
 	}
 
-	private static void heartbeat()
-	{
+	private static void heartbeat() throws IOException {
 		System.out.println("Master requesting a heartbeat");
-		try {
-			out.writeUTF("alive");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		out.writeUTF("alive");
 	}
 
-	private static void receiveFile() throws IOException
-	{
+	private static void receiveFile() throws IOException, ClassNotFoundException {
 //		String addedBy = in.readLine();
 //		String dateAdded = in.readLine();
 //		String fileName = in.readLine();
@@ -108,17 +99,13 @@ public class Slave
 //		int partsAmount = Integer.parseInt(in.readLine());
 		MetaFile file = null;
 		byte[] data = null;
-		try {
-			file = (MetaFile) in.readObject();
-			data = (byte[]) in.readObject();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}//new MetaFile(fileName, dateAdded, addedBy, partNumber, partsAmount);
+		file = (MetaFile) in.readObject();
+		data = (byte[]) in.readObject();
+		// new MetaFile(fileName, dateAdded, addedBy, partNumber, partsAmount);
 //		byte[] data = new byte[Integer.parseInt(in.readLine())];
 //		for (int i = 0; i < data.length; i++)
 //			data[i] = Byte.parseByte(in.readLine());
-		
-		
+
 		metaFiles.put(file.getFileName(), file);
 		FileOutputStream fos = new FileOutputStream(file.getFileName());
 		fos.write(data);
@@ -126,8 +113,7 @@ public class Slave
 		System.out.println("Succesfully received file: " + file.getFileName());
 	}
 
-	private static void sendFile() throws IOException
-	{
+	private static void sendFile() throws IOException {
 		String fileName = in.readUTF();
 		byte[] data = Files.readAllBytes(Paths.get(fileName));
 		out.writeObject(data);
@@ -137,8 +123,7 @@ public class Slave
 		System.out.println("Master requesting file: " + fileName);
 	}
 
-	private static void delFile() throws IOException
-	{
+	private static void delFile() throws IOException {
 		String fileName = in.readUTF();
 		Files.delete(Paths.get(fileName));
 		metaFiles.remove(fileName);
@@ -150,16 +135,14 @@ public class Slave
 	 * slave and the master running on the RAID server.
 	 * <p>
 	 * It starts with a simple prompt asking for the server's address (with
-	 * localhost and the webserver built in with a character shortcut).
-	 * It then creates a socket connection with that ip address on port 536. Next,
-	 * it stores a output stream inside a PrintWriter & a input stream inside of a
+	 * localhost and the webserver built in with a character shortcut). It then
+	 * creates a socket connection with that ip address on port 536. Next, it stores
+	 * a output stream inside a PrintWriter & a input stream inside of a
 	 * BufferedReader for later use.
 	 * 
-	 * @throws IOException if an I/O error occurs when creating the
-	 * output stream.
+	 * @throws IOException if an I/O error occurs when creating the output stream.
 	 */
-	private static void connectToRS() throws IOException
-	{
+	private static void connectToRS() throws IOException {
 		System.out.println("Welcome to The RAID Slave System");
 		System.out.println("What is the IP address for the RAID Server? (l == localhost, m == moshehirsch.com)");
 		String ip = kb.nextLine();
@@ -168,8 +151,9 @@ public class Slave
 		else if (ip.charAt(0) == 'm')
 			ip = "www.moshehirsch.com";
 		socket = new Socket(ip, 536);
-		out = new ObjectOutputStream(socket.getOutputStream());//PrintWriter(socket.getOutputStream(), true);
-		in = new ObjectInputStream(socket.getInputStream());//BufferedReader(new InputStreamReader(socket.getInputStream()));
+		out = new ObjectOutputStream(socket.getOutputStream());// PrintWriter(socket.getOutputStream(), true);
+		in = new ObjectInputStream(socket.getInputStream());// BufferedReader(new
+															// InputStreamReader(socket.getInputStream()));
 		System.out.println("Connected to the RAID Server: " + socket.getInetAddress() + ", " + socket.getLocalPort());
 	}
 }

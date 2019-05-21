@@ -4,7 +4,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -30,14 +29,16 @@ import java.util.Scanner;
  *
  */
 
-public class Slave {
+public class Slave
+{
 	private static Socket socket;
 	private static Scanner kb;
 	private static ObjectInputStream in;
 	private static ObjectOutputStream out;
 	private static HashMap<String, MetaFile> metaFiles;
 
-	public static void main(String[] args) throws IOException, ClassNotFoundException {
+	public static void main(String[] args) throws IOException, ClassNotFoundException
+	{
 		metaFiles = new HashMap<>();
 		kb = new Scanner(System.in);
 		connectToRS();
@@ -61,71 +62,80 @@ public class Slave {
 	 * <p>
 	 * Anything else prints an error message followed by the unknown command.
 	 * 
-	 * @throws IOException            if there is an error reading (most likely
-	 *                                caused by a unexpected server shutdown).
+	 * @throws IOException if there is an error reading (most likely
+	 * caused by a unexpected server shutdown).
 	 * @throws ClassNotFoundException
 	 */
-	private static void listen() throws IOException, ClassNotFoundException {
-		while (true) {
-			Object data = null;
-			try {
-				data = in.readObject();
-			} catch (ClassNotFoundException e) {
-				e.printStackTrace();
+	private static void listen() throws IOException, ClassNotFoundException
+	{
+		while (true)
+		{
+			SlaveCommand data = (SlaveCommand) in.readObject();
+			switch (data)
+			{
+
+				case Heartbeat:
+					heartbeat();
+					break;
+				case PutFile:
+					receiveFile();
+					break;
+				case GetFile:
+					sendFile();
+					break;
+				case DelFile:
+					delFile();
+					break;
+				case GetSpecs:
+					delFile();
+					break;
+				default:
+					System.out.println("ERROR! Unknown command: " + data);
+					break;
 			}
-			if (data == SlaveCommand.Heartbeat)
-				heartbeat();
-			else if (data == SlaveCommand.PutFile)
-				receiveFile();
-			else if (data == SlaveCommand.GetFile)
-				sendFile();
-			else if (data == SlaveCommand.DelFile)
-				delFile();
-			else if (data == SlaveCommand.GetSpecs)
-				delFile();
-			else
-				System.out.println("ERROR! Unknown command: " + data);
 		}
 	}
 
-	private static void heartbeat() throws IOException {
+	private static void heartbeat() throws IOException
+	{
 		System.out.println("Master requesting a heartbeat");
-		out.writeUTF("alive");
+		out.writeBoolean(true);
+		out.flush();
 	}
 
-	private static void receiveFile() throws IOException, ClassNotFoundException {
-//		String addedBy = in.readLine();
-//		String dateAdded = in.readLine();
-//		String fileName = in.readLine();
-//		int partNumber = Integer.parseInt(in.readLine());
-//		int partsAmount = Integer.parseInt(in.readLine());
-		MetaFile file = null;
-		byte[] data = null;
-		file = (MetaFile) in.readObject();
-		data = (byte[]) in.readObject();
-		// new MetaFile(fileName, dateAdded, addedBy, partNumber, partsAmount);
-//		byte[] data = new byte[Integer.parseInt(in.readLine())];
-//		for (int i = 0; i < data.length; i++)
-//			data[i] = Byte.parseByte(in.readLine());
-
+	private static void receiveFile() throws IOException, ClassNotFoundException
+	{
+		System.out.println("Master sending file");
+		MetaFile file = (MetaFile) in.readObject();
+		byte[] data = new byte[in.readInt()];
+		in.readFully(data);
 		metaFiles.put(file.getFileName(), file);
-		FileOutputStream fos = new FileOutputStream(file.getFileName());
-		fos.write(data);
-		fos.close();
+		try (FileOutputStream fos = new FileOutputStream(file.getFileName()))
+		{
+			fos.write(data);
+		}
+		catch (Exception e)
+		{
+			// TODO try again? send error to master??
+		}
+
 		System.out.println("Succesfully received file: " + file.getFileName());
 	}
 
-	private static void sendFile() throws IOException {
+	private static void sendFile() throws IOException
+	{
 		String fileName = in.readUTF();
-		byte[] data = Files.readAllBytes(Paths.get(fileName));
-		out.writeObject(data);
-//		out.println(data.length);
-//		for (byte b : data)
-//			out.println(b);
 		System.out.println("Master requesting file: " + fileName);
+		byte[] data = Files.readAllBytes(Paths.get(fileName));
+		out.writeInt(data.length);
+		out.flush();
+		out.write(data);
+		out.flush();
+		System.out.println("Finished sending");
 	}
 
-	private static void delFile() throws IOException {
+	private static void delFile() throws IOException
+	{
 		String fileName = in.readUTF();
 		Files.delete(Paths.get(fileName));
 		metaFiles.remove(fileName);
@@ -144,7 +154,8 @@ public class Slave {
 	 * 
 	 * @throws IOException if an I/O error occurs when creating the output stream.
 	 */
-	private static void connectToRS() throws IOException {
+	private static void connectToRS() throws IOException
+	{
 		System.out.println("Welcome to The RAID Slave System");
 		System.out.println("What is the IP address for the RAID Server? (l == localhost, m == moshehirsch.com)");
 		String ip = kb.nextLine();
@@ -153,13 +164,14 @@ public class Slave {
 		else if (ip.charAt(0) == 'm')
 			ip = "www.moshehirsch.com";
 		socket = new Socket(ip, 536);
-		out = new ObjectOutputStream(socket.getOutputStream());// PrintWriter(socket.getOutputStream(), true);
-		in = new ObjectInputStream(socket.getInputStream());// BufferedReader(new
-															// InputStreamReader(socket.getInputStream()));
+		out = new ObjectOutputStream(socket.getOutputStream());
+		in = new ObjectInputStream(socket.getInputStream());
 		System.out.println("Connected to the RAID Server: " + socket.getInetAddress() + ", " + socket.getLocalPort());
 	}
 
-	public void getSpecs() throws IOException {
-		out.writeObject(0);
+	public void getSpecs() throws IOException
+	{
+		out.writeInt(0);
+		out.flush();
 	}
 }

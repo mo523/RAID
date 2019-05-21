@@ -47,11 +47,21 @@ public class Server extends Thread
 					catch (IOException e)
 					{
 						System.out.println("\tClient disconnected;\n\t\t" + ps);
+						e.printStackTrace();
 						synchronized (clients)
 						{
+							try
+							{
+								ps.close();
+							}
+							catch (IOException e1)
+							{
+							}
 							clients.remove(ps);
 						}
-					} catch (ClassNotFoundException e) {
+					}
+					catch (ClassNotFoundException e)
+					{
 						e.printStackTrace();
 					}
 				}).start();
@@ -68,8 +78,11 @@ public class Server extends Thread
 	{
 		return clients.size();
 	}
+
 	/**
-	 *  This method returns an ArrayList of Strings of all the MetaFiles or an ArryList containing one String: "No files..."
+	 * This method returns an ArrayList of Strings of all the MetaFiles or an
+	 * ArryList containing one String: "No files..."
+	 * 
 	 * @return
 	 */
 	public ArrayList<String> getFileInfo()
@@ -95,7 +108,7 @@ public class Server extends Thread
 		return modCount;
 	}
 
-	public byte[] getFile(String fileName) throws IOException, ClassNotFoundException
+	public byte[] getFile(String fileName) throws IOException
 	{
 		return master.getFile(fileName);
 	}

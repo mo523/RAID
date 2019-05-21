@@ -1,7 +1,10 @@
 package RAID;
 
-public class MetaFile
+import java.io.Serializable;
+
+public class MetaFile implements Serializable
 {
+	private static final long serialVersionUID = 1L;
 	private String fileName;
 	private String dateAdded;
 	private String addedBy;

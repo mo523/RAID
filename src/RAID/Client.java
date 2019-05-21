@@ -1,12 +1,9 @@
 package RAID;
 
-import java.io.BufferedReader;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -14,8 +11,8 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
- * The {@code Client} class is a standalone class used for the client side of the
- * RAID system. The class is completely static since it contains its own
+ * The {@code Client} class is a standalone class used for the client side of
+ * the RAID system. The class is completely static since it contains its own
  * {@code main} method and should not be instantiated in another class.
  * <p>
  * {@code Client} works by connecting to the {@link RAID_Server} through the
@@ -33,10 +30,8 @@ public class Client
 {
 	private static Socket socket;
 	private static Scanner kb;
-	private static PrintWriter out;
-	private static ObjectOutputStream objectOut;
-	private static ObjectInputStream objectIn;
-	private static BufferedReader in;
+	private static ObjectOutputStream out;
+	private static ObjectInputStream in;
 	private static int modCount = -1;
 	private static ArrayList<String> files = new ArrayList<>();
 
@@ -80,16 +75,14 @@ public class Client
 	@SuppressWarnings("unchecked")
 	private static ArrayList<String> getAllFileInfo() throws IOException, ClassNotFoundException
 	{
-		objectOut.writeObject(ClientChoice.SendInfo);//out.println("1");
-		objectOut.writeInt(modCount);//out.println(modCount);
-		int serverModCount = objectIn.readInt();//Integer.parseInt(in.readLine());
+		out.writeObject(ClientChoice.SendInfo);
+		out.writeInt(modCount);
+		out.flush();
+		int serverModCount = in.readInt();
 		if (modCount != serverModCount)
 		{
 			modCount = serverModCount;
-			files = (ArrayList<String>) objectIn.readObject();/*new ArrayList<String>();
-			do
-				files.add(in.readLine());
-			while (in.ready());*/
+			files = (ArrayList<String>) in.readObject();
 		}
 		return files;
 	}
@@ -101,13 +94,12 @@ public class Client
 		for (int i = 0; i < files.size(); i++)
 			System.out.println((i + 1) + ". " + files.get(i));
 		int choice = choiceValidator(1, files.size()) - 1;
-		objectOut.writeObject(ClientChoice.SendFile);//out.println("3");
+		out.writeObject(ClientChoice.SendFile);
 		String fileName = files.get(choice).split("\\t+")[0];
-		out.println(fileName);
-//		byte[] data = new byte[Integer.parseInt(in.readLine())];
-//		for (int i = 0; i < data.length; i++)
-//			data[i] = (byte) Byte.parseByte(in.readLine());
-		byte[] data = (byte[]) objectIn.readObject();
+		out.writeUTF(fileName);
+		out.flush();
+		byte[] data = new byte[in.readInt()];
+		in.readFully(data);
 		saveFile(fileName, data);
 	}
 
@@ -130,9 +122,9 @@ public class Client
 		for (int i = 0; i < files.size(); i++)
 			System.out.println((i + 1) + ". " + files.get(i));
 		int choice = choiceValidator(1, files.size()) - 1;
-		objectOut.writeObject(ClientChoice.DelFile);//out.println("4");
+		out.writeObject(ClientChoice.DelFile);
 		String fileName = files.get(choice).split("\\t+")[0];
-		out.println(fileName);
+		out.writeUTF(fileName);
 	}
 
 	private static void addFile() throws IOException
@@ -157,13 +149,13 @@ public class Client
 				System.out.println("File too big...");
 			}
 		} while (fileContent == null);
-		objectOut.writeObject(ClientChoice.GetFile);//out.println("2");
+		out.writeObject(ClientChoice.GetFile);
 		String fileNames[] = filePath.split("[\\\\/]");
-		out.println(fileNames[fileNames.length - 1]);
-		objectOut.writeObject(fileContent);
-//		out.println(fileContent.length);
-//		for (int i = 0; i < fileContent.length; i++)
-//			out.println(fileContent[i]);
+		out.writeUTF(fileNames[fileNames.length - 1]);
+		out.writeInt(fileContent.length);
+		out.flush();
+		out.write(fileContent);
+		out.flush();
 	}
 
 	public static boolean exists(String filePath)
@@ -183,11 +175,10 @@ public class Client
 		print("What is your name?");
 		String name = kb.nextLine();
 		socket = new Socket(ip, 436);
-		out = new PrintWriter(socket.getOutputStream(), true);
-		objectOut = new ObjectOutputStream(socket.getOutputStream());
-		in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-		objectIn = new ObjectInputStream(socket.getInputStream());
-		out.println(name);
+		out = new ObjectOutputStream(socket.getOutputStream());
+		in = new ObjectInputStream(socket.getInputStream());
+		out.writeUTF(name);
+		out.flush();
 		print("Connected to the RAID Server: " + socket.getInetAddress() + ", " + socket.getLocalPort());
 	}
 

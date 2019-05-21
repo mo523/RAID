@@ -3,86 +3,95 @@ package RAID;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
 import java.net.Socket;
 
-public class ConnectedSlave implements Comparable<ConnectedSlave> {
+public class ConnectedSlave implements Comparable<ConnectedSlave>
+{
 	private Socket socket;
 	private ObjectInputStream in;
 	private ObjectOutputStream out;
-	private PrintWriter textOut;
 
-	public ConnectedSlave(Socket socket) throws IOException {
+	public ConnectedSlave(Socket socket) throws IOException
+	{
 		this.socket = socket;
-		in = new ObjectInputStream(socket.getInputStream());// new BufferedReader(new
-															// InputStreamReader(socket.getInputStream()));
+		in = new ObjectInputStream(socket.getInputStream());
 		out = new ObjectOutputStream(socket.getOutputStream());
-		textOut = new PrintWriter(socket.getOutputStream());
 	}
 
-	public boolean disconnected() {
-		boolean dead = false;
-		try {
+	public boolean disconnected()
+	{
+		boolean alive;
+		try
+		{
 			out.writeObject(SlaveCommand.Heartbeat);
-			dead = in.readUTF().equals("alive");
-		} catch (IOException e) {
-			dead = true;
+			alive = in.readBoolean();
 		}
-		return dead;
+		catch (IOException e)
+		{
+			alive = true;
+		}
+		return !alive;
 	}
 
-	public void sendFile(MetaFile file, byte[] data) throws IOException {
-
-//		out.println(file.getAddedBy());
-//		out.println(file.getDateAdded());
-//		out.println(file.getFileName());
-//		out.println(file.getPartNumber());
-//		out.println(file.getPartsAmount());
+	public void sendFile(MetaFile file, byte[] data) throws IOException
+	{
 		out.writeObject(SlaveCommand.PutFile);
 		out.writeObject(file);
-		out.writeObject(data);
-
-//		out.println(data.length);
-//		for (int i = 0; i < data.length; i++)
-//			out.println(data[i]);
-
+		out.writeInt(data.length);
+		out.flush();
+		out.write(data);
+		out.flush();
 	}
 
-	public void sendMessage(String msg) {
-		textOut.write(msg);
+	public void sendMessage(String msg)
+	{
+		try
+		{
+			out.writeUTF(msg);
+		}
+		catch (IOException e)
+		{
+			System.out.println(this + ": slave threw error sending message");
+		}
 	}
 
 	@Override
-	public String toString() {
+	public String toString()
+	{
 		return "ip: " + socket.getLocalAddress() + ", port: " + socket.getPort();
 	}
 
-	public byte[] getFile(String fileName) throws IOException, ClassNotFoundException {
+	public byte[] getFile(String fileName) throws IOException
+	{
 		out.writeObject(SlaveCommand.GetFile);
 		out.writeUTF(fileName);
-		byte[] data = null;
-		data = (byte[]) in.readObject();
-		// new byte[Integer.parseInt(in.readLine())];
-//		for (int i = 0; i < data.length; i++)
-//			data[i] = Byte.parseByte(in.readLine());
+		out.flush();
+		byte[] data = new byte[in.readInt()];
+		in.readFully(data);
 		return data;
 	}
 
-	public void delFile(String fileName) throws IOException {
+	public void delFile(String fileName) throws IOException
+	{
 		out.writeObject(SlaveCommand.DelFile);
 		out.writeUTF(fileName);
 	}
 
-	public int getSpecs() throws IOException, ClassNotFoundException {
+	public int getSpecs() throws IOException
+	{
 		out.writeObject(SlaveCommand.GetSpecs);
-		return (int) in.readObject();
+		return in.readInt();
 	}
 
 	@Override
-	public int compareTo(ConnectedSlave other) {
-		try {
+	public int compareTo(ConnectedSlave other)
+	{
+		try
+		{
 			return this.getSpecs() - other.getSpecs();
-		} catch (ClassNotFoundException | IOException e) {
+		}
+		catch (IOException e)
+		{
 			e.printStackTrace();
 			return 0;
 		}

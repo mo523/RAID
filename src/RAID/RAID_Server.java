@@ -113,6 +113,7 @@ public class RAID_Server
 			{
 				System.out.println("ERROR! bad input");
 				choice = low - 1;
+				kb.nextLine();
 			}
 
 		} while (choice < low || choice > high);

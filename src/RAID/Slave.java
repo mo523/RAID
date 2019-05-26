@@ -78,7 +78,7 @@ public class Slave
 					heartbeat();
 					break;
 				case PutFile:
-					receiveFile();
+					saveFile();
 					break;
 				case GetFile:
 					sendFile();
@@ -87,7 +87,10 @@ public class Slave
 					delFile();
 					break;
 				case GetSpecs:
-					delFile();
+					getSpecs();
+					break;
+				case SplitFile:
+					splitFile();
 					break;
 				default:
 					System.out.println("ERROR! Unknown command: " + data);
@@ -96,19 +99,13 @@ public class Slave
 		}
 	}
 
-	private static void heartbeat() throws IOException
-	{
-		System.out.println("Master requesting a heartbeat");
-		out.writeBoolean(true);
-		out.flush();
-	}
-
-	private static void receiveFile() throws IOException, ClassNotFoundException
+	private static void saveFile() throws ClassNotFoundException, IOException
 	{
 		System.out.println("Master sending file");
 		MetaFile file = (MetaFile) in.readObject();
 		byte[] data = new byte[in.readInt()];
 		in.readFully(data);
+		System.out.println("Succesfully received file: " + file.getFileName());
 		metaFiles.put(file.getFileName(), file);
 		try (FileOutputStream fos = new FileOutputStream(file.getFileName()))
 		{
@@ -118,8 +115,14 @@ public class Slave
 		{
 			// TODO try again? send error to master??
 		}
+		System.out.println("Finished writing file to disk");
+	}
 
-		System.out.println("Succesfully received file: " + file.getFileName());
+	private static void heartbeat() throws IOException
+	{
+		System.out.println("Master requesting a heartbeat");
+		out.writeBoolean(false);
+		out.flush();
 	}
 
 	private static void sendFile() throws IOException
@@ -140,6 +143,59 @@ public class Slave
 		Files.delete(Paths.get(fileName));
 		metaFiles.remove(fileName);
 		System.out.println("Master requesting deletion of: " + fileName);
+	}
+
+	private static void splitFile() throws ClassNotFoundException, IOException
+	{
+		MetaFile file = (MetaFile) in.readObject();
+		int slaves = file.getPartsAmount();
+
+		byte[] data = new byte[in.readInt()];
+		in.readFully(data);
+
+		int parts = slaves - 1;
+		System.out.println("Splitting file into " + parts + " parts & one parity part");
+		int fileSize = data.length;
+		int splitSize = fileSize / parts;
+		int padding = 0;
+		if (fileSize % parts != 0)
+		{
+			splitSize++;
+			padding = parts - fileSize % parts;
+			System.out.println("Padding required " + padding);
+		}
+		byte[][] split = new byte[slaves][splitSize];
+		for (int i = 0; i < parts; i++)
+			for (int j = 0; j < split[i].length; j++)
+				if (i * splitSize + j >= fileSize)
+					break;
+				else
+					split[i][j] = data[i * splitSize + j];
+		System.out.println("Finished splitting file, creating parity bits");
+		for (int i = 0; i < splitSize; i++)
+		{
+			byte b = split[0][i];
+			for (int j = 1; j < parts; j++)
+				b ^= split[j][i];
+			split[split.length - 1][i] = b;
+		}
+		out.writeInt(split[0].length);
+		out.flush();
+		for (int i = 0; i < split.length - 1; i++)
+		{
+			out.write(split[i]);
+			out.flush();
+		}
+		System.out.println("Finished sending file parts to master");
+		metaFiles.put(file.getFileName(), file);
+		try (FileOutputStream fos = new FileOutputStream(file.getFileName()))
+		{
+			fos.write(split[split.length - 1]);
+		}
+		catch (Exception e)
+		{
+		}
+		System.out.println("Finished writing file to disk");
 	}
 
 	/**
@@ -169,9 +225,13 @@ public class Slave
 		System.out.println("Connected to the RAID Server: " + socket.getInetAddress() + ", " + socket.getLocalPort());
 	}
 
-	public void getSpecs() throws IOException
+	public static void getSpecs() throws IOException
 	{
-		out.writeInt(0);
+		int specs = 0;
+		if (System.getProperty("user.dir").contains("eclipse"))
+			specs = 10000000;
+		System.out.println("Master requesting specs: " + specs);
+		out.writeInt(specs);
 		out.flush();
 	}
 }

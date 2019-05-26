@@ -10,14 +10,21 @@ public class MetaFile implements Serializable
 	private String addedBy;
 	private int partNumber;
 	private int partsAmount;
+	private int padding;
 
-	public MetaFile(String fileName, String dateAdded, String addedBy, int partNumber, int partsAmount)
+	public MetaFile(String fileName, String dateAdded, String addedBy, int partNumber, int partsAmount, int padding)
 	{
 		this.addedBy = addedBy;
 		this.dateAdded = dateAdded;
 		this.fileName = fileName;
 		this.partNumber = partNumber;
 		this.partsAmount = partsAmount;
+		this.padding = padding;
+	}
+	
+	public MetaFile getNextMetaFile()
+	{
+		return new MetaFile(fileName, dateAdded, addedBy, ++partNumber, partsAmount, padding);
 	}
 
 	public String getDateAdded()
@@ -43,6 +50,11 @@ public class MetaFile implements Serializable
 	public int getPartsAmount()
 	{
 		return partsAmount;
+	}
+
+	public int getPadding()
+	{
+		return padding;
 	}
 
 	@Override

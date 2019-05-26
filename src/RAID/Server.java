@@ -96,11 +96,11 @@ public class Server extends Thread
 		return fileInfo;
 	}
 
-	public void addFile(MetaFile file, byte[] data) throws IOException
+	public void addFile(String fileName, String name, byte[] data) throws IOException
 	{
 		modCount++;
 		// Passes file to Master
-		master.addFile(file, data);
+		master.addFile(fileName, name, data);
 	}
 
 	public int getModCount()

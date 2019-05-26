@@ -10,27 +10,29 @@ public class ConnectedSlave implements Comparable<ConnectedSlave>
 	private Socket socket;
 	private ObjectInputStream in;
 	private ObjectOutputStream out;
+	private int currSpecs;
 
 	public ConnectedSlave(Socket socket) throws IOException
 	{
 		this.socket = socket;
 		in = new ObjectInputStream(socket.getInputStream());
 		out = new ObjectOutputStream(socket.getOutputStream());
+		currSpecs = -1;
 	}
 
 	public boolean disconnected()
 	{
-		boolean alive;
+		boolean dead;
 		try
 		{
 			out.writeObject(SlaveCommand.Heartbeat);
-			alive = in.readBoolean();
+			dead = in.readBoolean();
 		}
 		catch (IOException e)
 		{
-			alive = true;
+			dead = true;
 		}
-		return !alive;
+		return dead;
 	}
 
 	public void sendFile(MetaFile file, byte[] data) throws IOException
@@ -77,23 +79,35 @@ public class ConnectedSlave implements Comparable<ConnectedSlave>
 		out.writeUTF(fileName);
 	}
 
-	public int getSpecs() throws IOException
+	public void updateSpecs() throws IOException
 	{
 		out.writeObject(SlaveCommand.GetSpecs);
-		return in.readInt();
+		currSpecs = in.readInt();
+	}
+
+	public int getCurrSpecs()
+	{
+		return currSpecs;
 	}
 
 	@Override
 	public int compareTo(ConnectedSlave other)
 	{
-		try
-		{
-			return this.getSpecs() - other.getSpecs();
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-			return 0;
-		}
+		return other.getCurrSpecs() - currSpecs;
+	}
+
+	public byte[][] splitFile(MetaFile file, byte[] data) throws IOException
+	{
+		out.writeObject(SlaveCommand.SplitFile);
+		out.writeObject(file);
+		out.writeInt(data.length);
+		out.flush();
+		out.write(data);
+		out.flush();
+		int splitLength = in.readInt();
+		byte[][] splitData = new byte[file.getPartsAmount() - 1][splitLength];
+		for (int i = 0; i < splitData.length; i++)
+			in.readFully(splitData[i]);
+		return splitData;
 	}
 }

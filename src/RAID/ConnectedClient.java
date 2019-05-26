@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.Date;
 
 public class ConnectedClient
 {
@@ -73,8 +72,7 @@ public class ConnectedClient
 		String fileName = in.readUTF();
 		byte[] data = new byte[in.readInt()];
 		in.readFully(data);
-		MetaFile file = new MetaFile(fileName, new Date().toString().substring(0, 16), name, 0, 1);
-		server.addFile(file, data);
+		server.addFile(fileName, name, data);
 	}
 
 	private void sendInfo() throws IOException

@@ -2,6 +2,7 @@ package RAID;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.PriorityQueue;
@@ -44,15 +45,43 @@ public class Master extends Thread
 		}
 	}
 
-	public void addFile(MetaFile file, byte[] data) throws IOException
+	public void addFile(String fileName, String name, byte[] data) throws IOException
 	{
 		checkForDisconnect();
+		MetaFile file;
 		synchronized (slaves)
 		{
-			for (ConnectedSlave cs : slaves)
-				cs.sendFile(file, data);
+			int padding = 0;
+			if (slaves.size() < 3)
+			{
+				System.out.println("Not enough slaves for parity backup, sending complete file to all slaves");
+				file = new MetaFile(fileName, new Date().toString().substring(0, 16), name, -1, slaves.size(), padding);
+				for (ConnectedSlave cs : slaves)
+					cs.sendFile(file, data);
+			}
+			else
+			{
+				if (data.length % (slaves.size() - 1) != 0)
+					padding = (slaves.size() - 1) - (data.length) % (slaves.size() - 1);
+				file = new MetaFile(fileName, new Date().toString().substring(0, 16), name, -1, slaves.size(), padding);
+				for (ConnectedSlave cs : slaves)
+					cs.updateSpecs();
+				PriorityQueue<ConnectedSlave> pq = new PriorityQueue<>();
+				for (ConnectedSlave cs : slaves)
+					pq.add(cs);
+				ConnectedSlave currSlave = pq.poll();
+				MetaFile nfile = file.getNextMetaFile();
+				byte[][] splitData = currSlave.splitFile(nfile, data);
+				for (int i = 0; i < splitData.length; i++)
+				{
+					currSlave = pq.poll();
+					nfile = nfile.getNextMetaFile();
+					currSlave.sendFile(nfile, splitData[i]);
+				}
+			}
 		}
 		files.put(file.getFileName(), file);
+
 	}
 
 	public void broadcastMessage(String msg)
@@ -70,7 +99,7 @@ public class Master extends Thread
 			{
 				if (s.disconnected())
 				{
-					System.out.println(s.toString() + " is disconnected");
+					System.out.println("\t\t" + s.toString() + " is disconnected");
 					disconnected.add(s);
 				}
 			}

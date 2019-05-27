@@ -44,7 +44,7 @@ public class Master extends Thread
 			}
 		}
 	}
-
+	
 	public void addFile(String fileName, String name, byte[] data) throws IOException
 	{
 		checkForDisconnect();
@@ -55,7 +55,8 @@ public class Master extends Thread
 			if (slaves.size() < 3)
 			{
 				System.out.println("Not enough slaves for parity backup, sending complete file to all slaves");
-				file = new MetaFile(fileName, new Date().toString().substring(0, 16), name, -1, slaves.size(), padding);
+				file = new MetaFile(fileName, new Date().toString().substring(0, 16), name, 0, slaves.size(), padding,
+						data.length + padding);
 				for (ConnectedSlave cs : slaves)
 					cs.sendFile(file, data);
 			}
@@ -63,12 +64,10 @@ public class Master extends Thread
 			{
 				if (data.length % (slaves.size() - 1) != 0)
 					padding = (slaves.size() - 1) - (data.length) % (slaves.size() - 1);
-				file = new MetaFile(fileName, new Date().toString().substring(0, 16), name, -1, slaves.size(), padding);
-				for (ConnectedSlave cs : slaves)
-					cs.updateSpecs();
-				PriorityQueue<ConnectedSlave> pq = new PriorityQueue<>();
-				for (ConnectedSlave cs : slaves)
-					pq.add(cs);
+				file = new MetaFile(fileName, new Date().toString().substring(0, 16), name, -1, slaves.size(), padding,
+						data.length + padding);
+				PriorityQueue<ConnectedSlave> pq = getSlavePQ();
+
 				ConnectedSlave currSlave = pq.poll();
 				MetaFile nfile = file.getNextMetaFile();
 				byte[][] splitData = currSlave.splitFile(nfile, data);
@@ -90,7 +89,7 @@ public class Master extends Thread
 			s.sendMessage(msg);
 	}
 
-	public void checkForDisconnect()
+	public void checkForDisconnect() throws IOException
 	{
 		HashSet<ConnectedSlave> disconnected = new HashSet<>();
 		synchronized (slaves)
@@ -104,6 +103,21 @@ public class Master extends Thread
 				}
 			}
 			slaves.removeAll(disconnected);
+
+			// Recover lost files
+			if (!disconnected.isEmpty())
+			{
+				PriorityQueue<ConnectedSlave> pq = getSlavePQ();
+				ConnectedSlave currSlave = pq.poll();
+				for (MetaFile mf : files.values())
+				{
+					HashMap<Integer, byte[]> parts = new HashMap<>();
+					for (ConnectedSlave cs : pq)
+						cs.getFile(parts, mf.getFileName());
+					byte[] data = currSlave.recoverFile(mf, parts);
+					addFile(mf.getFileName(), mf.getAddedBy(), data);
+				}
+			}
 		}
 	}
 
@@ -121,9 +135,14 @@ public class Master extends Thread
 	{
 		synchronized (slaves)
 		{
-			PriorityQueue<ConnectedSlave> pq = setPriorityQueue();
-			ConnectedSlave cs = pq.remove();
-			return cs.getFile(fileName);
+			checkForDisconnect();
+			HashMap<Integer, byte[]> parts = new HashMap<>();
+			PriorityQueue<ConnectedSlave> pq = getSlavePQ();
+			ConnectedSlave currSlave = pq.remove();
+			MetaFile file = files.get(fileName);
+			for (ConnectedSlave cs : pq)
+				cs.getFile(parts, file.getFileName());
+			return currSlave.buildFile(file, parts);
 		}
 	}
 
@@ -137,10 +156,13 @@ public class Master extends Thread
 		files.remove(fileName);
 	}
 
-	public PriorityQueue<ConnectedSlave> setPriorityQueue()
+	private PriorityQueue<ConnectedSlave> getSlavePQ() throws IOException
 	{
 		PriorityQueue<ConnectedSlave> pq = new PriorityQueue<ConnectedSlave>();
-		slaves.forEach(s -> pq.add(s));
+		for (ConnectedSlave cs : slaves)
+			cs.updateSpecs();
+		for (ConnectedSlave cs : slaves)
+			pq.add(cs);
 		return pq;
 	}
 

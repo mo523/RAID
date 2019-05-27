@@ -125,6 +125,7 @@ public class Client
 		out.writeObject(ClientChoice.DelFile);
 		String fileName = files.get(choice).split("\\t+")[0];
 		out.writeUTF(fileName);
+		out.flush();
 	}
 
 	private static void addFile() throws IOException

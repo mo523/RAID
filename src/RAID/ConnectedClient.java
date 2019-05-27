@@ -44,6 +44,7 @@ public class ConnectedClient
 					break;
 				case DelFile:
 					delFile();
+					break;
 				default:
 					System.out.println("huh");
 					break;
@@ -54,7 +55,8 @@ public class ConnectedClient
 	private void delFile() throws IOException
 	{
 		String fileName = in.readUTF();
-		server.delFile(fileName);
+		System.out.println(name + " would like to delete: " + fileName);
+
 	}
 
 	private void sendFile() throws IOException

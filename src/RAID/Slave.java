@@ -92,6 +92,12 @@ public class Slave
 				case SplitFile:
 					splitFile();
 					break;
+				case RecoverFile:
+					recoverFile();
+					break;
+				case BuildFile:
+					buildFile();
+					break;
 				default:
 					System.out.println("ERROR! Unknown command: " + data);
 					break;
@@ -129,12 +135,20 @@ public class Slave
 	{
 		String fileName = in.readUTF();
 		System.out.println("Master requesting file: " + fileName);
-		byte[] data = Files.readAllBytes(Paths.get(fileName));
-		out.writeInt(data.length);
-		out.flush();
-		out.write(data);
-		out.flush();
-		System.out.println("Finished sending");
+		if (metaFiles.containsKey(fileName))
+		{
+			out.writeBoolean(true);
+			byte[] data = Files.readAllBytes(Paths.get(fileName));
+			out.writeInt(data.length);
+			out.flush();
+			out.write(data);
+			out.flush();
+			out.writeInt(metaFiles.get(fileName).getPartNumber());
+			out.flush();
+			System.out.println("Finished sending");
+		}
+		else
+			out.writeBoolean(false);
 	}
 
 	private static void delFile() throws IOException
@@ -196,6 +210,71 @@ public class Slave
 		{
 		}
 		System.out.println("Finished writing file to disk");
+	}
+
+	private static void buildFile() throws IOException, ClassNotFoundException
+	{
+		MetaFile file = (MetaFile) in.readObject();
+		String fileName = file.getFileName();
+		int parts = file.getPartsAmount();
+		int partSize = file.getSize() / (parts - 1);
+		byte[][] fileParts = new byte[parts][partSize];
+		for (int i = 0; i < parts - 1; i++)
+		{
+			int partNum = in.readInt();
+			in.readFully(fileParts[partNum]);
+		}
+		if (metaFiles.containsKey(fileName))
+			fileParts[metaFiles.get(fileName).getPartNumber()] = Files.readAllBytes(Paths.get(fileName));
+		byte[] fullFile = new byte[file.getSize() - file.getPadding()];
+		for (int i = 0; i < fullFile.length; i++)
+			fullFile[i] = fileParts[i / partSize + 1][i % partSize];
+		out.writeInt(fullFile.length);
+		out.flush();
+		out.write(fullFile);
+		out.flush();
+	}
+
+	private static void recoverFile() throws IOException, ClassNotFoundException
+	{
+		MetaFile file = (MetaFile) in.readObject();
+		String fileName = file.getFileName();
+		int parts = file.getPartsAmount();
+		int partSize = file.getSize() / (parts - 1);
+		byte[][] fileParts = new byte[parts][];
+		for (int i = 0; i < parts - 2; i++)
+		{
+			int partNum = in.readInt();
+			fileParts[partNum] = new byte[partSize];
+			in.readFully(fileParts[partNum]);
+		}
+		if (metaFiles.containsKey(fileName))
+			fileParts[metaFiles.get(fileName).getPartNumber()] = Files.readAllBytes(Paths.get(fileName));
+		int missing = -1;
+		for (int i = 0; i < parts; i++)
+			if (fileParts[i] == null)
+				missing = i;
+		if (missing != 0)
+		{
+			fileParts[missing] = new byte[partSize];
+			for (int i = 0; i < partSize; i++)
+			{
+				byte b = fileParts[0][i];
+				for (int j = 1; j < fileParts.length; j++)
+					if (j == missing)
+						continue;
+					else
+						b ^= fileParts[j][i];
+				fileParts[missing][i] = b;
+			}
+		}
+		byte[] fullFile = new byte[file.getSize() - file.getPadding()];
+		for (int i = 0; i < fullFile.length; i++)
+			fullFile[i] = fileParts[i / partSize + 1][i % partSize];
+		out.writeInt(fullFile.length);
+		out.flush();
+		out.write(fullFile);
+		out.flush();
 	}
 
 	/**

@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ConnectedSlave implements Comparable<ConnectedSlave>
 {
@@ -63,20 +65,11 @@ public class ConnectedSlave implements Comparable<ConnectedSlave>
 		return "ip: " + socket.getLocalAddress() + ", port: " + socket.getPort();
 	}
 
-	public byte[] getFile(String fileName) throws IOException
-	{
-		out.writeObject(SlaveCommand.GetFile);
-		out.writeUTF(fileName);
-		out.flush();
-		byte[] data = new byte[in.readInt()];
-		in.readFully(data);
-		return data;
-	}
-
 	public void delFile(String fileName) throws IOException
 	{
 		out.writeObject(SlaveCommand.DelFile);
 		out.writeUTF(fileName);
+		out.flush();
 	}
 
 	public void updateSpecs() throws IOException
@@ -109,5 +102,52 @@ public class ConnectedSlave implements Comparable<ConnectedSlave>
 		for (int i = 0; i < splitData.length; i++)
 			in.readFully(splitData[i]);
 		return splitData;
+	}
+
+	public byte[] recoverFile(MetaFile file, HashMap<Integer, byte[]> parts) throws IOException
+	{
+		out.writeObject(SlaveCommand.RecoverFile);
+		out.writeObject(file);
+		for (Map.Entry<Integer, byte[]> fp : parts.entrySet())
+		{
+			out.writeInt(fp.getKey());
+			out.flush();
+			out.write(fp.getValue());
+			out.flush();
+		}
+		byte[] data = new byte[in.readInt()];
+		in.readFully(data);
+		return data;
+	}
+
+	public void getFile(HashMap<Integer, byte[]> parts, String fileName) throws IOException
+	{
+		out.writeObject(SlaveCommand.GetFile);
+		out.writeUTF(fileName);
+		out.flush();
+		boolean hasFile = in.readBoolean();
+		if (hasFile)
+		{
+			byte[] data = new byte[in.readInt()];
+			in.readFully(data);
+			int partNumber = in.readInt();
+			parts.put(partNumber, data);
+		}
+	}
+
+	public byte[] buildFile(MetaFile file, HashMap<Integer, byte[]> parts) throws IOException
+	{
+		out.writeObject(SlaveCommand.BuildFile);
+		out.writeObject(file);
+		for (Map.Entry<Integer, byte[]> fp : parts.entrySet())
+		{
+			out.writeInt(fp.getKey());
+			out.flush();
+			out.write(fp.getValue());
+			out.flush();
+		}
+		byte[] data = new byte[in.readInt()];
+		in.readFully(data);
+		return data;
 	}
 }

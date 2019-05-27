@@ -2,5 +2,5 @@ package RAID;
 
 public enum SlaveCommand
 {
-	Heartbeat, PutFile, GetFile, DelFile, GetSpecs, SplitFile
+	Heartbeat, PutFile, GetFile, DelFile, GetSpecs, SplitFile, RecoverFile, BuildFile
 }

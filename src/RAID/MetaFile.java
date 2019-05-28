@@ -13,7 +13,7 @@ public class MetaFile implements Serializable
 	private int padding;
 	private int size;
 
-	public MetaFile(String fileName, String dateAdded, String addedBy, int partNumber, int partsAmount, int padding,int size)
+	public MetaFile(String fileName, String dateAdded, String addedBy, int partNumber, int partsAmount, int padding, int size)
 	{
 		this.addedBy = addedBy;
 		this.dateAdded = dateAdded;

@@ -1,14 +1,21 @@
 package RAID;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.nio.file.DirectoryIteratorException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Scanner;
+import java.util.Set;
 
 /**
  * The {@code Slave} class is a standalone class used for the slave side of the
@@ -42,8 +49,51 @@ public class Slave
 		metaFiles = new HashMap<>();
 		kb = new Scanner(System.in);
 		connectToRS();
+		readPrevSessionFiles();
+		sendPrevSessionFiles();
 		listen();
 		kb.close();
+	}
+
+	private static void sendPrevSessionFiles() throws IOException {
+		out.writeObject(metaFiles);
+		out.flush();
+	}
+
+	private static void readPrevSessionFiles() throws IOException, ClassNotFoundException {
+		Set<String> prevFiles = new HashSet<>();
+		Set<String> tempMetaFiles = new HashSet<>();
+	
+		String path = new File("").getCanonicalPath();
+		Path dir = Paths.get(path);
+		try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
+		    for (Path file: stream) {
+		    	File tempFile = file.toFile();
+		    	if(tempFile.isFile() && !tempFile.getName().matches("(.classpath|.project|desktop.ini)")) {
+		    		if(tempFile.getName().endsWith(".MetaFile"))
+		    			tempMetaFiles.add(tempFile.getName());
+		    		else
+		    			prevFiles.add(tempFile.getName());
+		    	}
+		    		
+		    }
+		} catch (IOException | DirectoryIteratorException x) {
+		    System.err.println(x);
+		}
+		//this part only adds the MetaFile if its corresponding actual file is extant
+		for(String meta: tempMetaFiles) {
+			if(prevFiles.contains(removeExtension(meta))) {
+				ObjectInputStream metaReader = new ObjectInputStream(new FileInputStream(meta));
+				metaFiles.put(removeExtension(meta), (MetaFile) metaReader.readObject());
+				metaReader.close();
+			}
+		}
+		
+	}
+	private static String removeExtension(String fileName) {
+		if(fileName.contains("."))
+			return fileName.substring(0, fileName.lastIndexOf("."));
+		return fileName;
 	}
 
 	/**
@@ -113,9 +163,12 @@ public class Slave
 		in.readFully(data);
 		System.out.println("Succesfully received file: " + file.getFileName());
 		metaFiles.put(file.getFileName(), file);
-		try (FileOutputStream fos = new FileOutputStream(file.getFileName()))
-		{
+		
+		try (FileOutputStream fos = new FileOutputStream(file.getFileName());
+				ObjectOutputStream metaWriter = new ObjectOutputStream(
+						new FileOutputStream(file.getFileName() + ".MetaFile"))) {
 			fos.write(data);
+			metaWriter.writeObject(file);
 		}
 		catch (Exception e)
 		{

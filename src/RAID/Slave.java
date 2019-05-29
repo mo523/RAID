@@ -12,6 +12,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Scanner;
@@ -255,9 +256,13 @@ public class Slave
 		}
 		System.out.println("Finished sending file parts to master");
 		metaFiles.put(file.getFileName(), file);
-		try (FileOutputStream fos = new FileOutputStream(file.getFileName()))
+		try (FileOutputStream fos = new FileOutputStream(file.getFileName());
+				ObjectOutputStream metaWriter = new ObjectOutputStream(//mayer
+				new FileOutputStream(file.getFileName() + ".MetaFile")))//mayer
 		{
 			fos.write(split[split.length - 1]);
+			metaWriter.writeObject((new MetaFile(file.getFileName(), new Date().toString().substring(0, 16),//mayer
+					file.getAddedBy(), split.length - 1, split.length - 1, padding, split[0].length)));//mayer
 		}
 		catch (Exception e)
 		{
@@ -266,7 +271,8 @@ public class Slave
 	}
 
 	private static void buildFile() throws IOException, ClassNotFoundException
-	{
+	{	
+		System.out.println("Building File");
 		MetaFile file = (MetaFile) in.readObject();
 		String fileName = file.getFileName();
 		int parts = file.getPartsAmount();

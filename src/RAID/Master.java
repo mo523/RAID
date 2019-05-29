@@ -140,7 +140,8 @@ public class Master extends Thread
 			checkForDisconnect();
 			HashMap<Integer, byte[]> parts = new HashMap<>();
 			PriorityQueue<ConnectedSlave> pq = getSlavePQ();
-			ConnectedSlave currSlave = pq.remove();
+//			ConnectedSlave currSlave = pq.remove();
+			ConnectedSlave currSlave = pq.peek();
 			MetaFile file = files.get(fileName);
 			for (ConnectedSlave cs : pq)
 				cs.getFile(parts, file.getFileName());

@@ -44,7 +44,7 @@ public class Master extends Thread
 			}
 		}
 	}
-	
+
 	public void addFile(String fileName, String name, byte[] data) throws IOException
 	{
 		checkForDisconnect();
@@ -54,11 +54,15 @@ public class Master extends Thread
 			int padding = 0;
 			if (slaves.size() < 3)
 			{
-				System.out.println("Not enough slaves for parity backup, sending complete file to all slaves");
-				file = new MetaFile(fileName, new Date().toString().substring(0, 16), name, 0, slaves.size(), padding,
+				file = new MetaFile(fileName, new Date().toString().substring(0, 16), name, -1, slaves.size(), padding,
 						data.length + padding);
+				System.out.println("Not enough slaves for parity backup, sending complete file to all slaves");
+				MetaFile nFile = file.getNextMetaFile();
 				for (ConnectedSlave cs : slaves)
-					cs.sendFile(file, data);
+				{
+					cs.sendFile(nFile, data);
+					nFile = nFile.getNextMetaFile();
+				}
 			}
 			else
 			{
@@ -67,7 +71,6 @@ public class Master extends Thread
 				file = new MetaFile(fileName, new Date().toString().substring(0, 16), name, -1, slaves.size(), padding,
 						data.length + padding);
 				PriorityQueue<ConnectedSlave> pq = getSlavePQ();
-
 				ConnectedSlave currSlave = pq.poll();
 				MetaFile nfile = file.getNextMetaFile();
 				byte[][] splitData = currSlave.splitFile(nfile, data);

@@ -217,7 +217,7 @@ public class Slave
 		MetaFile file = (MetaFile) in.readObject();
 		String fileName = file.getFileName();
 		int parts = file.getPartsAmount();
-		int partSize = file.getSize() / (parts - 1);
+		int partSize = file.getSize() / (parts == 1 ? 1 : parts - 1);
 		byte[][] fileParts = new byte[parts][partSize];
 		for (int i = 0; i < parts - 1; i++)
 		{
@@ -228,7 +228,7 @@ public class Slave
 			fileParts[metaFiles.get(fileName).getPartNumber()] = Files.readAllBytes(Paths.get(fileName));
 		byte[] fullFile = new byte[file.getSize() - file.getPadding()];
 		for (int i = 0; i < fullFile.length; i++)
-			fullFile[i] = fileParts[i / partSize + 1][i % partSize];
+			fullFile[i] = fileParts[i / partSize + (parts == 1 ? 0 : 1)][i % partSize];
 		out.writeInt(fullFile.length);
 		out.flush();
 		out.write(fullFile);

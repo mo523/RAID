@@ -47,7 +47,6 @@ public class Server extends Thread
 					catch (IOException e)
 					{
 						System.out.println("\tClient disconnected;\n\t\t" + ps);
-						e.printStackTrace();
 						synchronized (clients)
 						{
 							try

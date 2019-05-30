@@ -26,7 +26,6 @@ public class ConnectedClient
 	{
 		while (true)
 		{
-
 			ClientChoice choice = (ClientChoice) in.readObject();
 			switch (choice)
 			{

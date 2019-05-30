@@ -72,6 +72,11 @@ public class ConnectedSlave implements Comparable<ConnectedSlave>
 		out.flush();
 	}
 
+	public void shutdown() throws IOException
+	{
+		out.writeObject(SlaveCommand.Shutdown);
+	}
+	
 	public void updateSpecs() throws IOException
 	{
 		out.writeObject(SlaveCommand.GetSpecs);
@@ -150,13 +155,18 @@ public class ConnectedSlave implements Comparable<ConnectedSlave>
 		in.readFully(data);
 		return data;
 	}
-	public HashMap<String, MetaFile> getPrevSessionFiles() {
+
+	public HashMap<String, MetaFile> getPrevSessionFiles()
+	{
 		System.out.println("In CON SL, getting prev files");
-		try {
+		try
+		{
 			Object tempObject = in.readObject();
 			if (tempObject instanceof HashMap<?, ?>)
 				return (HashMap<String, MetaFile>) tempObject;
-		} catch (ClassNotFoundException | IOException e) {
+		}
+		catch (ClassNotFoundException | IOException e)
+		{
 		}
 		return null;
 	}

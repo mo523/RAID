@@ -152,6 +152,12 @@ public class Master extends Thread
 		}
 	}
 
+	public void delAllFiles() throws IOException
+	{
+		for (String fName : files.keySet())
+			delFile(fName);
+	}
+
 	public void delFile(String fileName) throws IOException
 	{
 		synchronized (slaves)
@@ -172,4 +178,9 @@ public class Master extends Thread
 		return pq;
 	}
 
+	public void shutdown() throws IOException
+	{
+		for (ConnectedSlave cs: slaves)
+			cs.shutdown();
+	}
 }

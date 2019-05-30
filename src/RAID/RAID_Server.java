@@ -48,12 +48,15 @@ public class RAID_Server
 		int choice;
 		do
 		{
-			print("\nMain menu\n0. Shutdown RAID Server\n1. View stats\n2. Broadcast a message");
+			print("\nMain menu\n0. Shutdown RAID Server\n1. View stats\n2. Broadcast a message\n3. Delete all files");
 			choice = choiceValidator(-1, 3);
 			switch (choice)
 			{
 				case -1:
 					testing();
+					break;
+				case 0:
+					shutdown();
 					break;
 				case 1:
 					master.checkForDisconnect();
@@ -64,10 +67,30 @@ public class RAID_Server
 				case 2:
 					broadcastMenu();
 					break;
+				case 3:
+					deleteMenu();
+					break;
 				default:
 					break;
 			}
 		} while (choice != 0);
+	}
+
+	private static void shutdown() throws IOException
+	{
+		master.shutdown();
+		server.shutdown();
+	}
+
+	private static void deleteMenu() throws IOException
+	{
+		System.out.println("Are you sure?\n1. Yes\n2. No");
+		int choice = choiceValidator(1, 2);
+		if (choice == 1)
+			master.delAllFiles();
+		else
+			System.out.println("Ok, cancelling...");
+
 	}
 
 	private static void broadcastMenu()
@@ -80,21 +103,21 @@ public class RAID_Server
 
 	private static void checkDisconnects()
 	{
-//		while (true)
-//		{
-//			try
-//			{
-//				Thread.sleep(30000);
-//			}
-//			catch (InterruptedException e)
-//			{
-//			}
-//			if (master.getSlaveCount() > 0)
-//			{
-//				print("Heartbeating...");
-//				master.checkForDisconnect();
-//			}
-//		}
+		// while (true)
+		// {
+		// try
+		// {
+		// Thread.sleep(30000);
+		// }
+		// catch (InterruptedException e)
+		// {
+		// }
+		// if (master.getSlaveCount() > 0)
+		// {
+		// print("Heartbeating...");
+		// master.checkForDisconnect();
+		// }
+		// }
 	}
 
 	private static int choiceValidator(int low, int high)

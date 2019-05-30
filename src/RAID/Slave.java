@@ -107,11 +107,20 @@ public class Slave
 				case BuildFile:
 					buildFile();
 					break;
+				case Shutdown:
+					shutdown();
+					break;
 				default:
 					System.out.println("ERROR! Unknown command: " + data);
 					break;
 			}
 		}
+	}
+
+	private static void shutdown()
+	{
+		System.out.println("Slave shutting down...");
+		System.exit(0);
 	}
 
 	private static void saveFile() throws ClassNotFoundException, IOException
@@ -124,7 +133,8 @@ public class Slave
 		metaFiles.put(file.getFileName(), file);
 		try (FileOutputStream fos = new FileOutputStream(file.getFileName());
 				ObjectOutputStream metaWriter = new ObjectOutputStream(
-						new FileOutputStream(file.getFileName() + ".MetaFile"))) {
+						new FileOutputStream(file.getFileName() + ".MetaFile")))
+		{
 			fos.write(data);
 			metaWriter.writeObject(file);
 		}
@@ -214,11 +224,11 @@ public class Slave
 		System.out.println("Finished sending file parts to master");
 		metaFiles.put(file.getFileName(), file);
 		try (FileOutputStream fos = new FileOutputStream(file.getFileName());
-				ObjectOutputStream metaWriter = new ObjectOutputStream(//mayer
-				new FileOutputStream(file.getFileName() + ".MetaFile")))//mayer
+				ObjectOutputStream metaWriter = new ObjectOutputStream(// mayer
+						new FileOutputStream(file.getFileName() + ".MetaFile")))// mayer
 		{
 			fos.write(split[split.length - 1]);
-			metaWriter.writeObject(file);//mayer
+			metaWriter.writeObject(file);// mayer
 		}
 		catch (Exception e)
 		{
@@ -327,37 +337,47 @@ public class Slave
 		out.writeInt(specs);
 		out.flush();
 	}
-	private static void sendPrevSessionFiles() throws IOException {
+
+	private static void sendPrevSessionFiles() throws IOException
+	{
 		System.out.println("Sending Previous Session Files");
 		out.writeObject(metaFiles);
 		out.flush();
 		System.out.println("Done Sending Previous Session Files");
 	}
 
-	private static void readPrevSessionFiles() throws IOException, ClassNotFoundException {
+	private static void readPrevSessionFiles() throws IOException, ClassNotFoundException
+	{
 		System.out.println("Reading Previous Session Files");
 		Set<String> prevFiles = new HashSet<>();
 		Set<String> tempMetaFiles = new HashSet<>();
-	
+
 		String path = new File("").getCanonicalPath();
 		Path dir = Paths.get(path);
-		try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
-		    for (Path file: stream) {
-		    	File tempFile = file.toFile();
-		    	if(tempFile.isFile() && !tempFile.getName().matches("(.classpath|.project|desktop.ini)")) {
-		    		if(tempFile.getName().endsWith(".MetaFile"))
-		    			tempMetaFiles.add(tempFile.getName());
-		    		else
-		    			prevFiles.add(tempFile.getName());
-		    	}
-		    		
-		    }
-		} catch (IOException | DirectoryIteratorException x) {
-		    System.err.println(x);
+		try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir))
+		{
+			for (Path file : stream)
+			{
+				File tempFile = file.toFile();
+				if (tempFile.isFile() && !tempFile.getName().matches("(.classpath|.project|desktop.ini)"))
+				{
+					if (tempFile.getName().endsWith(".MetaFile"))
+						tempMetaFiles.add(tempFile.getName());
+					else
+						prevFiles.add(tempFile.getName());
+				}
+
+			}
 		}
-		//this part only adds the MetaFile if its corresponding actual file is extant
-		for(String meta: tempMetaFiles) {
-			if(prevFiles.contains(removeExtension(meta))) {
+		catch (IOException | DirectoryIteratorException x)
+		{
+			System.err.println(x);
+		}
+		// this part only adds the MetaFile if its corresponding actual file is extant
+		for (String meta : tempMetaFiles)
+		{
+			if (prevFiles.contains(removeExtension(meta)))
+			{
 				ObjectInputStream metaReader = new ObjectInputStream(new FileInputStream(meta));
 				metaFiles.put(removeExtension(meta), (MetaFile) metaReader.readObject());
 				metaReader.close();
@@ -365,8 +385,10 @@ public class Slave
 		}
 		System.out.println("Done Reading Previous Session Files");
 	}
-	private static String removeExtension(String fileName) {
-		if(fileName.contains("."))
+
+	private static String removeExtension(String fileName)
+	{
+		if (fileName.contains("."))
 			return fileName.substring(0, fileName.lastIndexOf("."));
 		return fileName;
 	}

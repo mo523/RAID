@@ -116,4 +116,10 @@ public class Server extends Thread
 	{
 		master.delFile(fileName);
 	}
+
+	public void shutdown()
+	{
+		// TODO Auto-generated method stub
+		
+	}
 }

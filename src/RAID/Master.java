@@ -37,6 +37,9 @@ public class Master extends Thread
 					slaves.add(ps);
 				}
 				ss.close();
+				System.out.println("Slave added");
+				files.putAll(ps.getPrevSessionFiles());
+				System.out.println("Finished Connecting Slave");
 			}
 			catch (IOException e)
 			{

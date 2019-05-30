@@ -150,4 +150,14 @@ public class ConnectedSlave implements Comparable<ConnectedSlave>
 		in.readFully(data);
 		return data;
 	}
+	public HashMap<String, MetaFile> getPrevSessionFiles() {
+		System.out.println("In CON SL, getting prev files");
+		try {
+			Object tempObject = in.readObject();
+			if (tempObject instanceof HashMap<?, ?>)
+				return (HashMap<String, MetaFile>) tempObject;
+		} catch (ClassNotFoundException | IOException e) {
+		}
+		return null;
+	}
 }

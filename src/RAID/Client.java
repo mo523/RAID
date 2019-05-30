@@ -48,7 +48,7 @@ public class Client
 		int choice;
 		do
 		{
-			print("What would you like to do?\n0. Exit\n1. View all files\n2. Add a file\n3. Get a file\n4. Remove a file");
+			print("\n\nWhat would you like to do?\n0. Exit\n1. View all files\n2. Add a file\n3. Get a file\n4. Remove a file");
 			choice = choiceValidator(0, 4);
 			switch (choice)
 			{
@@ -90,17 +90,23 @@ public class Client
 	private static void getFile() throws IOException, ClassNotFoundException
 	{
 		ArrayList<String> files = getAllFileInfo();
-		System.out.println("Which file would you like to get?");
-		for (int i = 0; i < files.size(); i++)
-			System.out.println((i + 1) + ". " + files.get(i));
-		int choice = choiceValidator(1, files.size()) - 1;
-		out.writeObject(ClientChoice.SendFile);
-		String fileName = files.get(choice).split("\\t+")[0];
-		out.writeUTF(fileName);
-		out.flush();
-		byte[] data = new byte[in.readInt()];
-		in.readFully(data);
-		saveFile(fileName, data);
+		if (files.size() == 1 && files.get(0).equals("No files..."))
+			System.out.println(files.get(0));
+		else
+		{
+			System.out.println("Which file would you like to get?");
+			for (int i = 0; i < files.size(); i++)
+				System.out.println((i + 1) + ". " + files.get(i));
+			int choice = choiceValidator(1, files.size()) - 1;
+			out.writeObject(ClientChoice.SendFile);
+			String fileName = files.get(choice).split("\\t+")[0];
+			out.writeUTF(fileName);
+			out.flush();
+			byte[] data = new byte[in.readInt()];
+			in.readFully(data);
+			saveFile(fileName, data);
+			System.out.println("File received and saved to disk");
+		}
 	}
 
 	private static void saveFile(String fileName, byte[] data)

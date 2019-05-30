@@ -31,15 +31,14 @@ public class Master extends Thread
 			{
 				ServerSocket ss = new ServerSocket(536);
 				ConnectedSlave ps = new ConnectedSlave(ss.accept());
-				System.out.println("\tSlave connected;\n\t\t: " + ps);
+				System.out.println("\n\tSlave connected " + ps);
 				synchronized (slaves)
 				{
 					slaves.add(ps);
 				}
 				ss.close();
-				System.out.println("Slave added");
 				files.putAll(ps.getPrevSessionFiles());
-				System.out.println("Finished Connecting Slave");
+				System.out.println("\t\tReloading complete");
 			}
 			catch (IOException e)
 			{
@@ -82,8 +81,10 @@ public class Master extends Thread
 							padding, data.length + padding);
 					PriorityQueue<ConnectedSlave> pq = getSlavePQ();
 					ConnectedSlave currSlave = pq.poll();
+					System.out.println(currSlave + " chosen to build file");
 					MetaFile nfile = file.getNextMetaFile();
 					byte[][] splitData = currSlave.splitFile(nfile, data);
+					System.out.println(currSlave + " finished splitting file, sending to remaining slaves");
 					for (int i = 0; i < splitData.length; i++)
 					{
 						currSlave = pq.poll();
@@ -153,7 +154,10 @@ public class Master extends Thread
 			HashMap<Integer, byte[]> parts = new HashMap<>();
 			PriorityQueue<ConnectedSlave> pq = getSlavePQ();
 			ConnectedSlave currSlave = pq.remove();
+			System.out.println(currSlave + " chosen to build file");
 			MetaFile file = files.get(fileName);
+			System.out.println(file);
+			System.out.println("Getting parts from slaves");
 			for (ConnectedSlave cs : pq)
 				cs.getFile(parts, file.getFileName());
 			return currSlave.buildFile(file, parts);
@@ -174,6 +178,7 @@ public class Master extends Thread
 				cs.delFile(fileName);
 		}
 		files.remove(fileName);
+		System.out.println(fileName + " successfully removed");
 	}
 
 	private PriorityQueue<ConnectedSlave> getSlavePQ() throws IOException

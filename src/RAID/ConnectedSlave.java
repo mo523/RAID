@@ -62,7 +62,7 @@ public class ConnectedSlave implements Comparable<ConnectedSlave>
 	@Override
 	public String toString()
 	{
-		return "ip: " + socket.getLocalAddress() + ", port: " + socket.getPort();
+		return "ip: " + socket.getLocalSocketAddress() + ", port: " + socket.getPort();
 	}
 
 	public void delFile(String fileName) throws IOException
@@ -153,13 +153,14 @@ public class ConnectedSlave implements Comparable<ConnectedSlave>
 		}
 		byte[] data = new byte[in.readInt()];
 		in.readFully(data);
+		System.out.println(this + " finished building file");
 		return data;
 	}
 
 	@SuppressWarnings("unchecked")
 	public HashMap<String, MetaFile> getPrevSessionFiles()
 	{
-		System.out.println("In CON SL, getting prev files");
+		System.out.println("\t\tChecking for previous session files");
 		try
 		{
 			Object tempObject = in.readObject();

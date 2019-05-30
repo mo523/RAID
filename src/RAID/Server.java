@@ -34,7 +34,7 @@ public class Server extends Thread
 			{
 				ServerSocket ss = new ServerSocket(436);
 				ConnectedClient ps = new ConnectedClient(ss.accept(), this);
-				System.out.println("\tClient connected;\n\t\t" + ps);
+				System.out.println("\n\tClient connected " + ps);
 				synchronized (clients)
 				{
 					clients.add(ps);
@@ -46,7 +46,7 @@ public class Server extends Thread
 					}
 					catch (IOException e)
 					{
-						System.out.println("\tClient disconnected;\n\t\t" + ps);
+						System.out.println("\tClient disconnected " + ps);
 						synchronized (clients)
 						{
 							try

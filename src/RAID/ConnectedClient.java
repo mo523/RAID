@@ -32,7 +32,6 @@ public class ConnectedClient
 				case ThrowIOException:
 					throw new IOException();
 				case SendInfo:
-					System.out.println(name + " requesting file info");
 					sendInfo();
 					break;
 				case GetFile:
@@ -54,31 +53,36 @@ public class ConnectedClient
 	private void delFile() throws IOException
 	{
 		String fileName = in.readUTF();
-		System.out.println(name + " would like to delete: " + fileName);
-
+		System.out.println("\n" + name + " would like to delete: " + fileName);
+		server.delFile(fileName);
 	}
 
 	private void sendFile() throws IOException
 	{
 		String fileName = in.readUTF();
+		System.out.println("\n" + name + " requesting " + fileName);
 		byte[] data = server.getFile(fileName);
 		out.writeInt(data.length);
 		out.flush();
 		out.write(data);
 		out.flush();
+		System.out.println("Finished sending file to " + name);
 	}
 
 	private void getFile() throws IOException, ClassNotFoundException
 	{
 		String fileName = in.readUTF();
+		System.out.println("\n" + name + " sending new file: " + fileName);
 		byte[] data = new byte[in.readInt()];
 		in.readFully(data);
+		System.out.println("File received, passing on to slaves");
 		out.writeBoolean(server.addFile(fileName, name, data));
 		out.flush();
 	}
 
 	private void sendInfo() throws IOException
 	{
+		System.out.println("\n" + name + " requesting file info");
 		int clientModCount = in.readInt();
 		out.writeInt(server.getModCount());
 		out.flush();
@@ -88,7 +92,7 @@ public class ConnectedClient
 			System.out.println("Finished sending");
 		}
 		else
-			System.out.println("Client modcount up to date :)");
+			System.out.println("Client modcount up to date");
 	}
 
 	public String getClientName()

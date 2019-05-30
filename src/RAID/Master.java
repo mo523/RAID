@@ -48,45 +48,53 @@ public class Master extends Thread
 		}
 	}
 
-	public void addFile(String fileName, String name, byte[] data) throws IOException
+	public boolean addFile(String fileName, String name, byte[] data) throws IOException
 	{
 		checkForDisconnect();
 		MetaFile file;
 		synchronized (slaves)
 		{
 			int padding = 0;
-			if (slaves.size() < 3)
+			if (slaves.size() == 0)
 			{
-				file = new MetaFile(fileName, new Date().toString().substring(0, 16), name, -1, slaves.size(), padding,
-						data.length + padding);
-				System.out.println("Not enough slaves for parity backup, sending complete file to all slaves");
-				MetaFile nFile = file.getNextMetaFile();
-				for (ConnectedSlave cs : slaves)
-				{
-					cs.sendFile(nFile, data);
-					nFile = nFile.getNextMetaFile();
-				}
+				System.out.println("No slaves are connected yet");
+				return false;
 			}
 			else
 			{
-				if (data.length % (slaves.size() - 1) != 0)
-					padding = (slaves.size() - 1) - (data.length) % (slaves.size() - 1);
-				file = new MetaFile(fileName, new Date().toString().substring(0, 16), name, -1, slaves.size(), padding,
-						data.length + padding);
-				PriorityQueue<ConnectedSlave> pq = getSlavePQ();
-				ConnectedSlave currSlave = pq.poll();
-				MetaFile nfile = file.getNextMetaFile();
-				byte[][] splitData = currSlave.splitFile(nfile, data);
-				for (int i = 0; i < splitData.length; i++)
+				if (slaves.size() < 3)
 				{
-					currSlave = pq.poll();
-					nfile = nfile.getNextMetaFile();
-					currSlave.sendFile(nfile, splitData[i]);
+					file = new MetaFile(fileName, new Date().toString().substring(0, 16), name, -1, slaves.size(),
+							padding, data.length + padding);
+					System.out.println("Not enough slaves for parity backup, sending complete file to all slaves");
+					MetaFile nFile = file.getNextMetaFile();
+					for (ConnectedSlave cs : slaves)
+					{
+						cs.sendFile(nFile, data);
+						nFile = nFile.getNextMetaFile();
+					}
 				}
+				else
+				{
+					if (data.length % (slaves.size() - 1) != 0)
+						padding = (slaves.size() - 1) - (data.length) % (slaves.size() - 1);
+					file = new MetaFile(fileName, new Date().toString().substring(0, 16), name, -1, slaves.size(),
+							padding, data.length + padding);
+					PriorityQueue<ConnectedSlave> pq = getSlavePQ();
+					ConnectedSlave currSlave = pq.poll();
+					MetaFile nfile = file.getNextMetaFile();
+					byte[][] splitData = currSlave.splitFile(nfile, data);
+					for (int i = 0; i < splitData.length; i++)
+					{
+						currSlave = pq.poll();
+						nfile = nfile.getNextMetaFile();
+						currSlave.sendFile(nfile, splitData[i]);
+					}
+				}
+				files.put(file.getFileName(), file);
+				return true;
 			}
 		}
-		files.put(file.getFileName(), file);
-
 	}
 
 	public void broadcastMessage(String msg)
@@ -178,9 +186,20 @@ public class Master extends Thread
 		return pq;
 	}
 
-	public void shutdown() throws IOException
+	public void shutdown()
 	{
-		for (ConnectedSlave cs: slaves)
-			cs.shutdown();
+		for (ConnectedSlave cs : slaves)
+			try
+			{
+				cs.shutdown();
+			}
+			catch (IOException e)
+			{
+
+			}
+			finally
+			{
+
+			}
 	}
 }

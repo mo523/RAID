@@ -86,6 +86,6 @@ public class MetaFile implements Serializable
 	@Override
 	public String toString()
 	{
-		return fileName + "\t\t\t" + dateAdded;
+		return "File: " + fileName + ", Date Added: " + dateAdded + ", User: " + addedBy;
 	}
 }

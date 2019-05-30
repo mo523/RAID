@@ -73,7 +73,8 @@ public class ConnectedClient
 		String fileName = in.readUTF();
 		byte[] data = new byte[in.readInt()];
 		in.readFully(data);
-		server.addFile(fileName, name, data);
+		out.writeBoolean(server.addFile(fileName, name, data));
+		out.flush();
 	}
 
 	private void sendInfo() throws IOException

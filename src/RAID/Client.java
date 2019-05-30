@@ -157,6 +157,10 @@ public class Client
 		out.flush();
 		out.write(fileContent);
 		out.flush();
+		if (in.readBoolean())
+			System.out.println("File succesfully sent");
+		else
+			System.out.println("Sorry, there was a problem. Please try again later");
 	}
 
 	public static boolean exists(String filePath)

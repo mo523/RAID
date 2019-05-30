@@ -95,11 +95,16 @@ public class Server extends Thread
 		return fileInfo;
 	}
 
-	public void addFile(String fileName, String name, byte[] data) throws IOException
+	public boolean addFile(String fileName, String name, byte[] data) throws IOException
 	{
-		modCount++;
 		// Passes file to Master
-		master.addFile(fileName, name, data);
+		if (master.addFile(fileName, name, data))
+		{
+			modCount++;
+			return true;
+		}
+		else
+			return false;
 	}
 
 	public int getModCount()
@@ -120,6 +125,6 @@ public class Server extends Thread
 	public void shutdown()
 	{
 		// TODO Auto-generated method stub
-		
+
 	}
 }

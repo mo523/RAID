@@ -6,6 +6,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import java.security.Key;
 
 public class ConnectedSlave implements Comparable<ConnectedSlave>
 {
@@ -107,6 +108,19 @@ public class ConnectedSlave implements Comparable<ConnectedSlave>
 		for (int i = 0; i < splitData.length; i++)
 			in.readFully(splitData[i]);
 		return splitData;
+	}
+	
+	public byte[] encryptFile(Key key, byte[] data) throws IOException
+	{
+		out.writeObject(SlaveCommand.SplitFile);
+		out.write(data);
+		out.flush();
+		out.write(key.getEncoded());
+		out.flush();
+		
+		byte[] encryptedData = new byte[in.readInt()];
+		in.readFully(encryptedData);
+		return encryptedData;
 	}
 
 	public byte[] recoverFile(MetaFile file, HashMap<Integer, byte[]> parts) throws IOException

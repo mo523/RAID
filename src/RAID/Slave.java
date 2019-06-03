@@ -12,10 +12,18 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.Key;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
+import org.apache.commons.net.util.Base64;
+
 import java.lang.management.ManagementFactory;
 import com.sun.management.OperatingSystemMXBean;
 
@@ -107,6 +115,8 @@ public class Slave {
 			case Shutdown:
 				shutdown();
 				break;
+			case Encrypt:
+				encrypt();
 			default:
 				System.out.println("ERROR! Unknown command: " + data);
 				break;
@@ -361,5 +371,30 @@ public class Slave {
 		if (fileName.contains("."))
 			return fileName.substring(0, fileName.lastIndexOf("."));
 		return fileName;
+	}
+
+	public static void encrypt() {
+		String initVector = "encryptionIntVec";
+		try {
+			byte[] data = new byte[in.readInt()];
+			in.readFully(data);
+			
+			byte[] key = new byte[in.readInt()];
+			in.readFully(data);
+			
+			IvParameterSpec iv = new IvParameterSpec(initVector.getBytes("UTF-8"));
+			SecretKeySpec skeySpec = new SecretKeySpec(key, "AES");
+
+			Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+			cipher.init(Cipher.ENCRYPT_MODE, skeySpec, iv);
+
+			byte[] encrypted = cipher.doFinal(data);
+			System.out.println(Base64.encodeBase64(encrypted).length + "en");
+			out.write(Base64.encodeBase64(encrypted));
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
 	}
 }

@@ -98,13 +98,17 @@ public class Master extends Thread
 		}
 	}
 
-	public void broadcastMessage(String msg)
+	public void broadcastMessage(String msg) throws IOException
 	{
-		for (ConnectedSlave s : slaves)
-			s.sendMessage(msg);
+		synchronized (slaves)
+		{
+			checkForDisconnect();
+			for (ConnectedSlave s : slaves)
+				s.sendMessage(msg);
+		}
 	}
 
-	public void checkForDisconnect() throws IOException
+	public void checkForDisconnect()
 	{
 		HashSet<ConnectedSlave> disconnected = new HashSet<>();
 		synchronized (slaves)
@@ -122,15 +126,25 @@ public class Master extends Thread
 			// Recover lost files
 			if (!disconnected.isEmpty())
 			{
-				PriorityQueue<ConnectedSlave> pq = getSlavePQ();
-				ConnectedSlave currSlave = pq.poll();
-				for (MetaFile mf : files.values())
+				PriorityQueue<ConnectedSlave> pq;
+				try
 				{
-					HashMap<Integer, byte[]> parts = new HashMap<>();
-					for (ConnectedSlave cs : pq)
-						cs.getFile(parts, mf.getFileName());
-					byte[] data = currSlave.recoverFile(mf, parts);
-					addFile(mf.getFileName(), mf.getAddedBy(), data);
+					pq = getSlavePQ();
+
+					ConnectedSlave currSlave = pq.poll();
+					for (MetaFile mf : files.values())
+					{
+						HashMap<Integer, byte[]> parts = new HashMap<>();
+						for (ConnectedSlave cs : pq)
+							cs.getFile(parts, mf.getFileName());
+						byte[] data = currSlave.recoverFile(mf, parts);
+						addFile(mf.getFileName(), mf.getAddedBy(), data);
+					}
+				}
+				catch (IOException e)
+				{
+					// TODO handle slave death during recovery
+					e.printStackTrace();
 				}
 			}
 		}
@@ -200,11 +214,6 @@ public class Master extends Thread
 			}
 			catch (IOException e)
 			{
-
-			}
-			finally
-			{
-
 			}
 	}
 }

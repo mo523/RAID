@@ -93,7 +93,7 @@ public class RAID_Server
 
 	}
 
-	private static void broadcastMenu()
+	private static void broadcastMenu() throws IOException
 	{
 		System.out.println("What would you like to broadcast?");
 		String msg = kb.nextLine();
@@ -103,21 +103,21 @@ public class RAID_Server
 
 	private static void checkDisconnects()
 	{
-		// while (true)
-		// {
-		// try
-		// {
-		// Thread.sleep(30000);
-		// }
-		// catch (InterruptedException e)
-		// {
-		// }
-		// if (master.getSlaveCount() > 0)
-		// {
-		// print("Heartbeating...");
-		// master.checkForDisconnect();
-		// }
-		// }
+		while (true)
+		{
+			try
+			{
+				Thread.sleep(30000);
+			}
+			catch (InterruptedException e)
+			{
+			}
+			if (master.getSlaveCount() > 0)
+			{
+				print("Heartbeating...");
+				master.checkForDisconnect();
+			}
+		}
 	}
 
 	private static int choiceValidator(int low, int high)

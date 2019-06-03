@@ -82,9 +82,11 @@ public class Slave
 			SlaveCommand data = (SlaveCommand) in.readObject();
 			switch (data)
 			{
-
 				case Heartbeat:
 					heartbeat();
+					break;
+				case Message:
+					printMessage();
 					break;
 				case PutFile:
 					saveFile();
@@ -115,6 +117,12 @@ public class Slave
 					break;
 			}
 		}
+	}
+
+	private static void printMessage() throws IOException
+	{
+		System.out.println("Master sending a message...");
+		System.out.println(in.readUTF());
 	}
 
 	private static void shutdown()

@@ -47,16 +47,11 @@ public class ConnectedSlave implements Comparable<ConnectedSlave>
 		out.flush();
 	}
 
-	public void sendMessage(String msg)
+	public void sendMessage(String msg) throws IOException
 	{
-		try
-		{
-			out.writeUTF(msg);
-		}
-		catch (IOException e)
-		{
-			System.out.println(this + ": slave threw error sending message");
-		}
+		out.writeObject(SlaveCommand.Message);
+		out.writeUTF(msg);
+		out.flush();
 	}
 
 	@Override
@@ -76,7 +71,7 @@ public class ConnectedSlave implements Comparable<ConnectedSlave>
 	{
 		out.writeObject(SlaveCommand.Shutdown);
 	}
-	
+
 	public void updateSpecs() throws IOException
 	{
 		out.writeObject(SlaveCommand.GetSpecs);

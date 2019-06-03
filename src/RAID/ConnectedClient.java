@@ -43,6 +43,8 @@ public class ConnectedClient
 				case DelFile:
 					delFile();
 					break;
+				case EncryptFile:
+					break;
 				default:
 					System.out.println("huh");
 					break;
@@ -77,6 +79,18 @@ public class ConnectedClient
 		in.readFully(data);
 		System.out.println("File received, passing on to slaves");
 		out.writeBoolean(server.addFile(fileName, name, data));
+		out.flush();
+	}
+	
+	private void encryptFile() throws IOException, ClassNotFoundException
+	{
+		String fileName = in.readUTF();
+		System.out.println("\n" + name + " sending new file: " + fileName);
+		byte[] data = new byte[in.readInt()];
+		in.readFully(data);
+		String password= in.readUTF();
+		System.out.println("File received, passing on to slaves");
+		out.writeBoolean(server.addEncryptedFile(fileName, name, data, password));
 		out.flush();
 	}
 

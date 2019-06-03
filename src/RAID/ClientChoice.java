@@ -2,5 +2,5 @@ package RAID;
 
 public enum ClientChoice
 {
-	ThrowIOException, SendInfo, GetFile, SendFile, DelFile
+	ThrowIOException, SendInfo, GetFile, SendFile, DelFile,EncryptFile
 }

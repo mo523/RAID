@@ -106,6 +106,18 @@ public class Server extends Thread
 		else
 			return false;
 	}
+	
+	public boolean addEncryptedFile(String fileName, String name, byte[] data, String password) throws IOException
+	{
+		// Passes file to Master
+		if (master.addEncryptedFile(fileName, name, data,password))
+		{
+			modCount++;
+			return true;
+		}
+		else
+			return false;
+	}
 
 	public int getModCount()
 	{

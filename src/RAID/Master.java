@@ -2,10 +2,19 @@ package RAID;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.security.Key;
+import java.security.SecureRandom;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.PriorityQueue;
+
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
+import org.apache.commons.net.util.Base64;
 
 public class Master extends Thread
 {
@@ -92,6 +101,81 @@ public class Master extends Thread
 						currSlave.sendFile(nfile, splitData[i]);
 					}
 				}
+				files.put(file.getFileName(), file);
+				return true;
+			}
+		}
+	}
+	
+	public boolean addEncryptedFile(String fileName, String name, byte[] data,String password) throws IOException
+	{
+		checkForDisconnect();
+		MetaFile file;
+		synchronized (slaves)
+		{
+			int padding = 0;
+			if (slaves.size() == 0)
+			{
+				System.out.println("No slaves are connected yet");
+				return false;
+			}
+			else
+			{
+				KeyGenerator keyGen;
+				keyGen = KeyGenerator.getInstance("AES");
+				SecureRandom secRandom = new SecureRandom();
+				
+				
+				
+			      
+			      //Initializing the KeyGenerator
+			      keyGen.init(secRandom);
+				
+				
+		     Key key = keyGen.generateKey();
+		     byte[] encryptedKey = encryptKey(key, password);
+					if (data.length % (slaves.size() - 1) != 0)
+						padding = (slaves.size() - 1) - (data.length) % (slaves.size() - 1);
+					file = new EncryptedMetaFile(fileName, new Date().toString().substring(0, 16), name, -1, slaves.size(),
+							padding, data.length + padding, encryptedKey);
+					PriorityQueue<ConnectedSlave> pq = getSlavePQ();
+					ConnectedSlave currSlave = pq.poll();
+					System.out.println(currSlave + " chosen to encrypt file");
+					
+					byte[] encryptedData = currSlave.encryptFile(key, data);
+					System.out.println(currSlave + " finished splitting file, sending to remaining slaves");
+					
+					if (slaves.size() < 3)
+					{
+						file = new MetaFile(fileName, new Date().toString().substring(0, 16), name, -1, slaves.size(),
+								padding, data.length + padding);
+						System.out.println("Not enough slaves for parity backup, sending complete file to all slaves");
+						MetaFile nFile = file.getNextMetaFile();
+						for (ConnectedSlave cs : slaves)
+						{
+							cs.sendFile(nFile, data);
+							nFile = nFile.getNextMetaFile();
+						}
+					}
+					else
+					{
+						if (data.length % (slaves.size() - 1) != 0)
+							padding = (slaves.size() - 1) - (data.length) % (slaves.size() - 1);
+						file = new MetaFile(fileName, new Date().toString().substring(0, 16), name, -1, slaves.size(),
+								padding, data.length + padding);
+						PriorityQueue<ConnectedSlave> pq = getSlavePQ();
+						ConnectedSlave currSlave = pq.poll();
+						System.out.println(currSlave + " chosen to build file");
+						MetaFile nfile = file.getNextMetaFile();
+						byte[][] splitData = currSlave.splitFile(nfile, data);
+						System.out.println(currSlave + " finished splitting file, sending to remaining slaves");
+						for (int i = 0; i < splitData.length; i++)
+						{
+							currSlave = pq.poll();
+							nfile = nfile.getNextMetaFile();
+							currSlave.sendFile(nfile, splitData[i]);
+						}
+					}
 				files.put(file.getFileName(), file);
 				return true;
 			}
@@ -206,5 +290,23 @@ public class Master extends Thread
 			{
 
 			}
+	}
+	
+	public byte[] encryptKey(Key key, String password) {
+	    try {
+	        IvParameterSpec iv = new IvParameterSpec("encryptionIntVec".getBytes("UTF-8"));
+	        SecretKeySpec skeySpec = new SecretKeySpec(password.getBytes(), "AES");
+	 
+	        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+	        cipher.init(Cipher.ENCRYPT_MODE, skeySpec, iv);
+	 
+	        byte[] encrypted = cipher.doFinal(key.getEncoded());
+	        System.out.println(Base64.encodeBase64(encrypted).length+"newen");
+	        return Base64.encodeBase64(encrypted);
+	        
+	    } catch (Exception ex) {
+	        ex.printStackTrace();
+	    }
+	    return null;
 	}
 }

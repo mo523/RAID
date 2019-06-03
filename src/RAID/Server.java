@@ -2,6 +2,7 @@ package RAID;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -62,6 +63,9 @@ public class Server extends Thread
 					catch (ClassNotFoundException e)
 					{
 						e.printStackTrace();
+					} catch (NoSuchAlgorithmException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
 				}).start();
 				ss.close();
@@ -107,7 +111,7 @@ public class Server extends Thread
 			return false;
 	}
 	
-	public boolean addEncryptedFile(String fileName, String name, byte[] data, String password) throws IOException
+	public boolean addEncryptedFile(String fileName, String name, byte[] data, String password) throws IOException, NoSuchAlgorithmException
 	{
 		// Passes file to Master
 		if (master.addEncryptedFile(fileName, name, data,password))

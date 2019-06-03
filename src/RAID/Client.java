@@ -156,13 +156,23 @@ public class Client
 				System.out.println("File too big...");
 			}
 		} while (fileContent == null);
+		System.out.println("Do you want to encrypt this file\n1:Yes\n2:No");
+		int choice=choiceValidator(1, 2);
+		if(choice==2)
 		out.writeObject(ClientChoice.GetFile);
+		else
+			out.writeObject(ClientChoice.EncryptFile);
 		String fileNames[] = filePath.split("[\\\\/]");
 		out.writeUTF(fileNames[fileNames.length - 1]);
 		out.writeInt(fileContent.length);
 		out.flush();
 		out.write(fileContent);
 		out.flush();
+		if(choice==1)
+		{
+			System.out.println("Please enter a password");
+			out.writeUTF(kb.next());
+		}
 		if (in.readBoolean())
 			System.out.println("File succesfully sent");
 		else

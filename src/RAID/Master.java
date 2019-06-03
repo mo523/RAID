@@ -3,6 +3,7 @@ package RAID;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.security.Key;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Date;
 import java.util.HashMap;
@@ -107,7 +108,7 @@ public class Master extends Thread
 		}
 	}
 	
-	public boolean addEncryptedFile(String fileName, String name, byte[] data,String password) throws IOException
+	public boolean addEncryptedFile(String fileName, String name, byte[] data,String password) throws IOException, NoSuchAlgorithmException
 	{
 		checkForDisconnect();
 		MetaFile file;
@@ -147,13 +148,12 @@ public class Master extends Thread
 					
 					if (slaves.size() < 3)
 					{
-						file = new MetaFile(fileName, new Date().toString().substring(0, 16), name, -1, slaves.size(),
-								padding, data.length + padding);
+						
 						System.out.println("Not enough slaves for parity backup, sending complete file to all slaves");
 						MetaFile nFile = file.getNextMetaFile();
 						for (ConnectedSlave cs : slaves)
 						{
-							cs.sendFile(nFile, data);
+							cs.sendFile(nFile, encryptedData);
 							nFile = nFile.getNextMetaFile();
 						}
 					}
@@ -161,13 +161,10 @@ public class Master extends Thread
 					{
 						if (data.length % (slaves.size() - 1) != 0)
 							padding = (slaves.size() - 1) - (data.length) % (slaves.size() - 1);
-						file = new MetaFile(fileName, new Date().toString().substring(0, 16), name, -1, slaves.size(),
-								padding, data.length + padding);
-						PriorityQueue<ConnectedSlave> pq = getSlavePQ();
-						ConnectedSlave currSlave = pq.poll();
+						currSlave = pq.poll();
 						System.out.println(currSlave + " chosen to build file");
 						MetaFile nfile = file.getNextMetaFile();
-						byte[][] splitData = currSlave.splitFile(nfile, data);
+						byte[][] splitData = currSlave.splitFile(nfile, encryptedData);
 						System.out.println(currSlave + " finished splitting file, sending to remaining slaves");
 						for (int i = 0; i < splitData.length; i++)
 						{

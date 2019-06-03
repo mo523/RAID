@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.security.NoSuchAlgorithmException;
 
 public class ConnectedClient
 {
@@ -22,7 +23,7 @@ public class ConnectedClient
 		this.name = in.readUTF();
 	}
 
-	void startListening() throws IOException, ClassNotFoundException
+	void startListening() throws IOException, ClassNotFoundException, NoSuchAlgorithmException
 	{
 		while (true)
 		{
@@ -44,6 +45,7 @@ public class ConnectedClient
 					delFile();
 					break;
 				case EncryptFile:
+					encryptFile();
 					break;
 				default:
 					System.out.println("huh");
@@ -82,7 +84,7 @@ public class ConnectedClient
 		out.flush();
 	}
 	
-	private void encryptFile() throws IOException, ClassNotFoundException
+	private void encryptFile() throws IOException, ClassNotFoundException, NoSuchAlgorithmException
 	{
 		String fileName = in.readUTF();
 		System.out.println("\n" + name + " sending new file: " + fileName);

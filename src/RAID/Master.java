@@ -168,7 +168,7 @@ public class Master extends Thread
 			HashMap<Integer, byte[]> parts = new HashMap<>();
 			PriorityQueue<ConnectedSlave> pq = getSlavePQ();
 			ConnectedSlave currSlave = pq.remove();
-			System.out.println(currSlave + " chosen to build file");
+			System.out.print(currSlave + " chosen to build file");
 			MetaFile file = files.get(fileName);
 			System.out.println(file);
 			System.out.println("Getting parts from slaves");

@@ -99,7 +99,9 @@ public class Client
 				System.out.println((i + 1) + ". " + files.get(i));
 			int choice = choiceValidator(1, files.size()) - 1;
 			out.writeObject(ClientChoice.SendFile);
-			String fileName = files.get(choice).split("\\t+")[0];
+			String fileName = files.get(choice);
+			fileName = fileName.substring(6, fileName.length());
+			fileName = fileName.split(",")[0];
 			out.writeUTF(fileName);
 			out.flush();
 			byte[] data = new byte[in.readInt()];

@@ -38,14 +38,16 @@ import com.sun.management.OperatingSystemMXBean;
  *
  */
 
-public class Slave {
+public class Slave
+{
 	private static Socket socket;
 	private static Scanner kb;
 	private static ObjectInputStream in;
 	private static ObjectOutputStream out;
 	private static HashMap<String, MetaFile> metaFiles;
 
-	public static void main(String[] args) throws IOException, ClassNotFoundException {
+	public static void main(String[] args) throws IOException, ClassNotFoundException
+	{
 		metaFiles = new HashMap<>();
 		kb = new Scanner(System.in);
 		connectToRS();
@@ -71,12 +73,14 @@ public class Slave {
 	 * <p>
 	 * Anything else prints an error message followed by the unknown command.
 	 * 
-	 * @throws IOException            if there is an error reading (most likely
-	 *                                caused by a unexpected server shutdown).
+	 * @throws IOException if there is an error reading (most likely
+	 * caused by a unexpected server shutdown).
 	 * @throws ClassNotFoundException
 	 */
-	private static void listen() throws IOException, ClassNotFoundException {
-		while (true) {
+	private static void listen() throws IOException, ClassNotFoundException
+	{
+		while (true)
+		{
 			SlaveCommand data = (SlaveCommand) in.readObject();
 			switch (data)
 			{
@@ -123,13 +127,14 @@ public class Slave {
 		System.out.println(in.readUTF());
 	}
 
-
-	private static void shutdown() {
+	private static void shutdown()
+	{
 		System.out.println("Slave shutting down...");
 		System.exit(0);
 	}
 
-	private static void saveFile() throws ClassNotFoundException, IOException {
+	private static void saveFile() throws ClassNotFoundException, IOException
+	{
 		System.out.println("Master sending file");
 		MetaFile file = (MetaFile) in.readObject();
 		byte[] data = new byte[in.readInt()];
@@ -138,25 +143,31 @@ public class Slave {
 		metaFiles.put(file.getFileName(), file);
 		try (FileOutputStream fos = new FileOutputStream(file.getFileName());
 				ObjectOutputStream metaWriter = new ObjectOutputStream(
-						new FileOutputStream(file.getFileName() + ".MetaFile"))) {
+						new FileOutputStream(file.getFileName() + ".MetaFile")))
+		{
 			fos.write(data);
 			metaWriter.writeObject(file);
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			// TODO try again? send error to master??
 		}
 		System.out.println("Finished writing file to disk");
 	}
 
-	private static void heartbeat() throws IOException {
+	private static void heartbeat() throws IOException
+	{
 		System.out.println("Master requesting a heartbeat");
 		out.writeBoolean(false);
 		out.flush();
 	}
 
-	private static void sendFile() throws IOException {
+	private static void sendFile() throws IOException
+	{
 		String fileName = in.readUTF();
 		System.out.println("Master requesting file: " + fileName);
-		if (metaFiles.containsKey(fileName)) {
+		if (metaFiles.containsKey(fileName))
+		{
 			out.writeBoolean(true);
 			byte[] data = Files.readAllBytes(Paths.get(fileName));
 			out.writeInt(data.length);
@@ -166,18 +177,21 @@ public class Slave {
 			out.writeInt(metaFiles.get(fileName).getPartNumber());
 			out.flush();
 			System.out.println("Finished sending");
-		} else
+		}
+		else
 			out.writeBoolean(false);
 	}
 
-	private static void delFile() throws IOException {
+	private static void delFile() throws IOException
+	{
 		String fileName = in.readUTF();
 		Files.delete(Paths.get(fileName));
 		metaFiles.remove(fileName);
 		System.out.println("Master requesting deletion of: " + fileName);
 	}
 
-	private static void splitFile() throws ClassNotFoundException, IOException {
+	private static void splitFile() throws ClassNotFoundException, IOException
+	{
 		MetaFile file = (MetaFile) in.readObject();
 		int slaves = file.getPartsAmount();
 
@@ -189,7 +203,8 @@ public class Slave {
 		int fileSize = data.length;
 		int splitSize = fileSize / parts;
 		int padding = 0;
-		if (fileSize % parts != 0) {
+		if (fileSize % parts != 0)
+		{
 			splitSize++;
 			padding = parts - fileSize % parts;
 			System.out.println("Padding required " + padding);
@@ -202,7 +217,8 @@ public class Slave {
 				else
 					split[i][j] = data[i * splitSize + j];
 		System.out.println("Finished splitting file, creating parity bits");
-		for (int i = 0; i < splitSize; i++) {
+		for (int i = 0; i < splitSize; i++)
+		{
 			byte b = split[0][i];
 			for (int j = 1; j < parts; j++)
 				b ^= split[j][i];
@@ -210,7 +226,8 @@ public class Slave {
 		}
 		out.writeInt(split[0].length);
 		out.flush();
-		for (int i = 0; i < split.length - 1; i++) {
+		for (int i = 0; i < split.length - 1; i++)
+		{
 			out.write(split[i]);
 			out.flush();
 		}
@@ -222,18 +239,22 @@ public class Slave {
 		{
 			fos.write(split[split.length - 1]);
 			metaWriter.writeObject(file);// mayer
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 		}
 		System.out.println("Finished writing file to disk");
 	}
 
-	private static void buildFile() throws IOException, ClassNotFoundException {
+	private static void buildFile() throws IOException, ClassNotFoundException
+	{
 		MetaFile file = (MetaFile) in.readObject();
 		String fileName = file.getFileName();
 		int parts = file.getPartsAmount();
 		int partSize = file.getSize() / (parts == 1 ? 1 : parts - 1);
 		byte[][] fileParts = new byte[parts][partSize];
-		for (int i = 0; i < parts - 1; i++) {
+		for (int i = 0; i < parts - 1; i++)
+		{
 			int partNum = in.readInt();
 			in.readFully(fileParts[partNum]);
 		}
@@ -248,13 +269,15 @@ public class Slave {
 		out.flush();
 	}
 
-	private static void recoverFile() throws IOException, ClassNotFoundException {
+	private static void recoverFile() throws IOException, ClassNotFoundException
+	{
 		MetaFile file = (MetaFile) in.readObject();
 		String fileName = file.getFileName();
 		int parts = file.getPartsAmount();
 		int partSize = file.getSize() / (parts - 1);
 		byte[][] fileParts = new byte[parts][];
-		for (int i = 0; i < parts - 2; i++) {
+		for (int i = 0; i < parts - 2; i++)
+		{
 			int partNum = in.readInt();
 			fileParts[partNum] = new byte[partSize];
 			in.readFully(fileParts[partNum]);
@@ -265,9 +288,11 @@ public class Slave {
 		for (int i = 0; i < parts; i++)
 			if (fileParts[i] == null)
 				missing = i;
-		if (missing != 0) {
+		if (missing != 0)
+		{
 			fileParts[missing] = new byte[partSize];
-			for (int i = 0; i < partSize; i++) {
+			for (int i = 0; i < partSize; i++)
+			{
 				byte b = fileParts[0][i];
 				for (int j = 1; j < fileParts.length; j++)
 					if (j == missing)
@@ -298,7 +323,8 @@ public class Slave {
 	 * 
 	 * @throws IOException if an I/O error occurs when creating the output stream.
 	 */
-	private static void connectToRS() throws IOException {
+	private static void connectToRS() throws IOException
+	{
 		System.out.println("Welcome to The RAID Slave System");
 		System.out.println("What is the IP address for the RAID Server? (l == localhost, m == moshehirsch.com)");
 		String ip = kb.nextLine();
@@ -312,40 +338,45 @@ public class Slave {
 		System.out.println("Connected to the RAID Server: " + socket.getInetAddress() + ", " + socket.getLocalPort());
 	}
 
-	public static void getSpecs() throws IOException {
+	public static void getSpecs() throws IOException
+	{
 		OperatingSystemMXBean osBean = ManagementFactory.getPlatformMXBean(OperatingSystemMXBean.class);
 		double processorBusyPerecent = osBean.getProcessCpuLoad();
 		int memory = (int) (osBean.getTotalPhysicalMemorySize() / 10000 + osBean.getFreeSwapSpaceSize() / 10000
 				+ osBean.getCommittedVirtualMemorySize() / 10000);
 		if (processorBusyPerecent == 0)
 			processorBusyPerecent = .00000000001;
-		int specs = (int) (osBean.getAvailableProcessors() / processorBusyPerecent) + memory;
-
+		int specs = (int) ((osBean.getAvailableProcessors() / processorBusyPerecent) + memory) / 1000;
 		if (System.getProperty("user.dir").contains("eclipse"))
-			specs = 10000000;
+			specs = Integer.MAX_VALUE;
 		System.out.println("Master requesting specs: " + specs);
 		out.writeInt(specs);
 		out.flush();
 	}
 
-	private static void sendPrevSessionFiles() throws IOException {
+	private static void sendPrevSessionFiles() throws IOException
+	{
 		System.out.println("Sending Previous Session Files");
 		out.writeObject(metaFiles);
 		out.flush();
 		System.out.println("Done Sending Previous Session Files");
 	}
 
-	private static void readPrevSessionFiles() throws IOException, ClassNotFoundException {
+	private static void readPrevSessionFiles() throws IOException, ClassNotFoundException
+	{
 		System.out.println("Reading Previous Session Files");
 		Set<String> prevFiles = new HashSet<>();
 		Set<String> tempMetaFiles = new HashSet<>();
 
 		String path = new File("").getCanonicalPath();
 		Path dir = Paths.get(path);
-		try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
-			for (Path file : stream) {
+		try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir))
+		{
+			for (Path file : stream)
+			{
 				File tempFile = file.toFile();
-				if (tempFile.isFile() && !tempFile.getName().matches("(.classpath|.project|desktop.ini)")) {
+				if (tempFile.isFile() && !tempFile.getName().matches("(.classpath|.project|desktop.ini)"))
+				{
 					if (tempFile.getName().endsWith(".MetaFile"))
 						tempMetaFiles.add(tempFile.getName());
 					else
@@ -353,12 +384,16 @@ public class Slave {
 				}
 
 			}
-		} catch (IOException | DirectoryIteratorException x) {
+		}
+		catch (IOException | DirectoryIteratorException x)
+		{
 			System.err.println(x);
 		}
 		// this part only adds the MetaFile if its corresponding actual file is extant
-		for (String meta : tempMetaFiles) {
-			if (prevFiles.contains(removeExtension(meta))) {
+		for (String meta : tempMetaFiles)
+		{
+			if (prevFiles.contains(removeExtension(meta)))
+			{
 				ObjectInputStream metaReader = new ObjectInputStream(new FileInputStream(meta));
 				metaFiles.put(removeExtension(meta), (MetaFile) metaReader.readObject());
 				metaReader.close();
@@ -367,7 +402,8 @@ public class Slave {
 		System.out.println("Done Reading Previous Session Files");
 	}
 
-	private static String removeExtension(String fileName) {
+	private static String removeExtension(String fileName)
+	{
 		if (fileName.contains("."))
 			return fileName.substring(0, fileName.lastIndexOf("."));
 		return fileName;
